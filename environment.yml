@@ -1,0 +1,13 @@
+name: provenance-explorer
+dependencies:
+  - python=3.14
+  - pandas
+  - scipy
+  - matplotlib
+  - ipykernel
+  - networkx
+  - fastavro
+  - google-auth-oauthlib
+  - pip
+  - pip:
+    - gdown
