@@ -1,0 +1,51 @@
+# --- Figure ---
+figure.figsize:      7, 4.5
+figure.dpi:          150
+figure.facecolor:    white
+savefig.dpi:         300
+savefig.bbox:        tight
+savefig.pad_inches:  0.05
+savefig.transparent: false
+
+# --- Font ---
+font.family:         serif
+font.size:           10
+text.usetex:         false
+mathtext.fontset:    cm
+
+# --- Axes ---
+axes.titlesize:      12
+axes.titleweight:    bold
+axes.titlepad:       10
+axes.labelsize:      10
+axes.labelpad:       6
+axes.linewidth:      0.6
+axes.edgecolor:      333333
+axes.facecolor:      white
+axes.grid:           true
+axes.spines.top:     false
+axes.spines.right:   false
+
+# --- Grid ---
+grid.color:          d0d0d0
+grid.linewidth:      0.4
+grid.linestyle:      -
+
+# --- Ticks ---
+xtick.labelsize:     9
+ytick.labelsize:     9
+xtick.direction:     out
+ytick.direction:     out
+xtick.major.width:   0.6
+ytick.major.width:   0.6
+xtick.minor.visible: false
+ytick.minor.visible: false
+
+# --- Legend ---
+legend.fontsize:     9
+legend.frameon:      false
+legend.loc:          best
+
+# --- Lines ---
+lines.linewidth:     1.4
+lines.markersize:    4
