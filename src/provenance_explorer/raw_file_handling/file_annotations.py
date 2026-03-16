@@ -13,68 +13,129 @@ import sys
 import time
 from pathlib import Path
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 from provenance_explorer.registry.repo_paths import DATA_RAW
 
-# Event keys across CDM versions
+# -- Constants --
+# Known CDM event keys (fully qualified).
+# FiveDirections E3 file 1 uses short keys like "Event" handled separately; otherwise these apply
 CDM18_EVENT_KEY = "com.bbn.tc.schema.avro.cdm18.Event"
 CDM20_EVENT_KEY = "com.bbn.tc.schema.avro.cdm20.Event"
-EVENT_KEYS = [CDM18_EVENT_KEY, CDM20_EVENT_KEY]
-NS_PER_SEC = 1_000_000_000
-EARLIEST_TOLERATED_NS_TS = datetime.fromisoformat("2015-01-01").timestamp() * NS_PER_SEC
+FULLY_QUALIFIED_EVENT_KEYS = [CDM18_EVENT_KEY, CDM20_EVENT_KEY]
+SHORT_EVENT_KEY = "Event"
 
-N_SAMPLE_LINES = 100 
-N_TIMESTAMP_TRY_HARDER_LINES = 1_000_000
+NS_PER_SEC = 1_000_000_000
+EARLIEST_TOLERATED_NS_TS = int(datetime.fromisoformat("2015-01-01").timestamp()) * NS_PER_SEC
+
+N_SAMPLE_LINES = 100
+N_EXTENDED_SEARCH_LINES = 1_000_000  # for finding first/last timestamp when head/tail have none; happens every now and then
 TAIL_CHUNK_SIZE = 1024 * 1024
 
 
-# helpers
-def _try_parse_line(raw: str) -> Optional[dict]:
-    """Try to parse a JSONL line, with trailing-comma fallback.
-    Returns (parsed_dict, needed_comma_strip) or (None, False)."""
+# -- Timestamp representation types --
+# The raw timestampNanos field can appear as:
+#   - int   (correct):   1523586247675522567
+#   - float (lossy):     1.52358624767e+18  (json parsed large number)
+#   - None  (missing)
+#
+# OpTC uses ISO 8601 strings at a different lcoation, always correct.
+#
+# 1. detect the representation from the first few samples, 
+# 2. then normalize all timestamps to int nanoseconds using the detected representation
+# (for metadata, raw files are not changed in this repo)
+def _classify_ts_representation(raw_value) -> str:
+    """
+    Classify a single raw timestampNanos value. 
+    Returns 'int_nanos', 'float_nanos', or 'unknown'.
+    """
+    if isinstance(raw_value, int):
+        return "int_nanos"
+    elif isinstance(raw_value, float):
+        return "float_nanos"
+    else:
+        return "unknown"
+
+def _normalize_ts_to_nanos(raw_value, representation: str) -> Optional[int]:
+    """
+    Convert a raw timestamp value to integer nanoseconds.
+    """
+    if raw_value is None:
+        return None
+    if representation in ("int_nanos", "float_nanos"):
+        return int(raw_value)
+    else:
+        return int(raw_value)
+        #except (TypeError, ValueError):
+        #    return None
+
+
+# -- helpers --
+def _try_parse_line(raw: str):
+    """
+    Try to parse a JSONL line, with trailing-comma fallback.
+    Returns (parsed_dict, needed_comma_strip): tuple[dict|None, bool].
+    """
     line = raw.strip()
     if not line:
-        return None, False # type: ignore
+        return None, False
     try:
-        return json.loads(line), False # type: ignore
+        return json.loads(line), False
     except json.JSONDecodeError:
         pass
     # trailing comma fallback
     if line.endswith(","):
         try:
-            return json.loads(line[:-1]), True # type: ignore
+            return json.loads(line[:-1]), True
         except json.JSONDecodeError:
             pass
-    return None, False # type: ignore
+    return None, False
 
-def _extract_event_timestamp(record: dict, dataset_kind: str) -> Optional[int]:
-    """Extract event timestamp as epoch nanos from a parsed record.
-    For E3/E5: looks inside datum for CDM Event timestampNanos.
-    For OpTC: converts ISO 8601 timestamp string to epoch nanos.
-    Returns None if this record has no usable event timestamp.
+def _extract_raw_event_timestamp(record: dict, dataset_kind: str):
     """
+    Extract the raw timestamp value from an event record.
+    For E3/E5: returns the raw value of timestampNanos (may be int or float).
+    For OpTC: returns the ISO 8601 string.
+    Returns None if the record has no event timestamp.
+    """
+    if record is None:
+        return None
     if dataset_kind == "optc":
-        # OpTC: top-level timestamp on action records (these are the "events")
-        ts_str = record.get("timestamp")
-        if ts_str is not None:
-            return _iso8601_to_nanos(ts_str)
+        return record.get("timestamp")
+    else:
+        datum = record.get("datum", {})
+        # Try fully-qualified keys first
+        for key in FULLY_QUALIFIED_EVENT_KEYS:
+            evt = datum.get(key)
+            if evt is not None and "timestampNanos" in evt:
+                return evt["timestampNanos"]
+        # Try short key; see FiveDirections fuckup
+        evt = datum.get(SHORT_EVENT_KEY)
+        if evt is not None and "timestampNanos" in evt:
+            return evt["timestampNanos"]
+        return None
+
+def _raw_ts_to_nanos(raw_value, dataset_kind: str, ts_representation: str) -> Optional[int]:
+    """
+    Convert a raw timestamp to integer nanoseconds.
+    acts accordingly, based on dataset kind and detected representation.
+    """
+    if raw_value is None:
+        return None
+    if dataset_kind == "optc":
+        if isinstance(raw_value, str):
+            return _iso8601_to_nanos(raw_value)
         return None
     else:
-        # E3 / E5: datum -> Event key -> timestampNanos
-        datum = record.get("datum", {})
-        for key in EVENT_KEYS:
-            evt = datum.get(key)
-            if evt and "timestampNanos" in evt:
-                return evt["timestampNanos"]
-        return None
+        return _normalize_ts_to_nanos(raw_value, ts_representation)
+
 
 def _iso8601_to_nanos(ts_str: str) -> int:
-    """Parse ISO 8601 timestamp string to epoch nanoseconds.
-    Handles formats like '2019-09-18T20:19:41.611-04:00' and '2019-09-25T09:04:43.06-04:00'.
+    """
+    Parse ISO 8601 timestamp string to epoch nanoseconds.
+    Handles formats like '2019-09-18T20:19:41.611-04:00'.
     Uses integer arithmetic to avoid float precision loss.
     """
-    from datetime import datetime, timezone, timedelta
     import re
 
     # Split off timezone offset
@@ -92,7 +153,6 @@ def _iso8601_to_nanos(ts_str: str) -> int:
     # Split fractional seconds and parse base datetime
     if "." in dt_part:
         main, frac = dt_part.split(".")
-        # Pad fractional part to 9 digits (nanoseconds)
         frac_ns = int(frac.ljust(9, "0")[:9])
     else:
         main = dt_part
@@ -101,10 +161,9 @@ def _iso8601_to_nanos(ts_str: str) -> int:
     dt = datetime.strptime(main, "%Y-%m-%dT%H:%M:%S")
     dt = dt.replace(tzinfo=tz)
 
-    # Use integer arithmetic: epoch seconds * 1B + fractional nanos
-    # calendar.timegm avoids float issues; we compute from the aware datetime
     epoch_s = int(dt.replace(microsecond=0).timestamp())
-    return epoch_s * 1_000_000_000 + frac_ns
+    return epoch_s * NS_PER_SEC + frac_ns
+
 
 def _detect_dataset_kind(rel_path: str) -> str:
     """Determine dataset kind from relative path. Returns 'e3', 'e5', or 'optc'."""
@@ -118,16 +177,11 @@ def _detect_dataset_kind(rel_path: str) -> str:
         raise ValueError(f"Unknown dataset kind for path: {rel_path}")
 
 def _detect_source_tag(rel_path: str) -> str:
-    """
-    Extract the sub-dataset name from relative path.
-    ie.. 'Engagement3/cadets/bla' -> 'cadets', 'OpTC/benign/17-18Sep19/AIA-51-75/blabla' -> 'AIA-51-75'
-    """
+    """Extract the sub-dataset name from relative path."""
     parts = Path(rel_path).parts
     if parts[0] in ("Engagement3", "Engagement5"):
-        return parts[1]  # cadets, clearscope, fivedirections, theia, trace, marple
+        return parts[1]
     elif parts[0] == "OpTC":
-        # e.g. OpTC/benign/17-18Sep19/AIA-51-75/file.json -> AIA-51-75
-        # Find the AIA-xxx-xxx part
         for p in parts:
             if p.startswith("AIA-"):
                 return p
@@ -161,7 +215,7 @@ def _read_tail_lines(file_path: Path, n: int) -> list[str]:
             buffer = f.read(read_size) + buffer
 
             split = buffer.split(b"\n")
-            buffer = split[0]  # possibly partial first line
+            buffer = split[0]
             complete = split[1:]
 
             for raw in reversed(complete):
@@ -171,7 +225,6 @@ def _read_tail_lines(file_path: Path, n: int) -> list[str]:
                     if len(lines) >= n:
                         break
 
-        # Handle remaining buffer (file with no leading newline or single-line file)
         if len(lines) < n and buffer.strip():
             lines.append(buffer.strip().decode("utf-8", errors="replace"))
 
@@ -227,9 +280,7 @@ def _check_uuid_case(records: list[dict], dataset_kind: str) -> str:
         return "no_alpha_hex"
 
 def _extract_wrapper_style(record: dict, dataset_kind: str) -> str:
-    """Characterize the top-level JSON wrapper structure.
-    Returns a string descriptor like 'datum+CDMVersion+source' or 'flat_optc'.
-    """
+    """Characterize the top-level JSON wrapper structure."""
     keys = sorted(record.keys())
     return "+".join(keys)
 
@@ -242,7 +293,6 @@ def _extract_source_field(records: list[dict], dataset_kind: str) -> Optional[st
     sources = set()
     for rec in records:
         if dataset_kind == "optc":
-            # OpTC has no source field in the same sense
             return None
         src = rec.get("source")
         if src:
@@ -255,7 +305,8 @@ def _extract_source_field(records: list[dict], dataset_kind: str) -> Optional[st
         return "mixed:" + ",".join(sorted(sources))
 
 def _check_ordering(timestamps: list[int]) -> tuple[bool, int]:
-    """Check if timestamps are approximately ordered.
+    """
+    Check if timestamps are approximately ordered.
     Returns (is_ordered, max_backward_jump_ns).
     is_ordered is True if no backward jump exceeds 10 seconds.
     """
@@ -266,25 +317,19 @@ def _check_ordering(timestamps: list[int]) -> tuple[bool, int]:
         diff = timestamps[i] - timestamps[i - 1]
         if diff < 0:
             max_backward = max(max_backward, -diff)
-    # 10 second tolerance
-    return max_backward <= 10_000_000_000, max_backward
+    return max_backward <= 10 * NS_PER_SEC, max_backward
 
-def _infer_timestamp_resolution(timestamps: list[int], dataset_kind: str) -> str:
-    """Infer the effective timestamp resolution from a set of timestamps.
-    Returns a string like 'nanoseconds', 'microseconds', 'milliseconds', 'seconds'.
+def _infer_timestamp_resolution(timestamps_ns: list[int], dataset_kind: str) -> str:
     """
-    if dataset_kind == "optc":
-        # OpTC uses ISO 8601 with variable fractional seconds - check the raw string instead
-        # But we only have parsed nanos here, so infer from the values
-        pass
-
-    if not timestamps:
+    Infer the effective timestamp resolution from normalized nanosecond timestamps.
+    Returns 'nanoseconds', 'microseconds', 'milliseconds', or 'seconds'.
+    """
+    if not timestamps_ns:
         return "unknown"
 
-    # Check what the smallest nonzero unit is
-    remainders_us = [t % 1000 for t in timestamps]  # nanos mod 1000
-    remainders_ms = [t % 1_000_000 for t in timestamps]  # nanos mod 1M
-    remainders_s = [t % 1_000_000_000 for t in timestamps]  # nanos mod 1B
+    remainders_us = [t % 1000 for t in timestamps_ns]
+    remainders_ms = [t % 1_000_000 for t in timestamps_ns]
+    remainders_s = [t % NS_PER_SEC for t in timestamps_ns]
 
     if any(r != 0 for r in remainders_us):
         return "nanoseconds"
@@ -298,12 +343,12 @@ def _infer_timestamp_resolution(timestamps: list[int], dataset_kind: str) -> str
 def _extract_sequence_range(records: list[dict], dataset_kind: str) -> Optional[tuple[int, int]]:
     """Extract min/max sequence numbers from sampled records."""
     if dataset_kind == "optc":
-        return None  # OpTC doesn't have sequence numbers
+        return None
 
     seqs = []
     for rec in records:
         datum = rec.get("datum", {})
-        for key in EVENT_KEYS:
+        for key in FULLY_QUALIFIED_EVENT_KEYS + [SHORT_EVENT_KEY]:
             evt = datum.get(key)
             if evt and "sequence" in evt:
                 seq_val = evt["sequence"]
@@ -316,55 +361,128 @@ def _extract_sequence_range(records: list[dict], dataset_kind: str) -> Optional[
     return min(seqs), max(seqs)
 
 
+def _detect_ts_representation(records: list[dict], dataset_kind: str) -> str:
+    """
+    Detect the timestamp representation used in a set of records.
+    Scans records for the first event with a timestampNanos value and
+    classifies it. Returns 'int_nanos', 'float_nanos', 'iso8601', or 'none'.
+    """
+    if dataset_kind == "optc":
+        return "iso8601"
+    
+    for rec in records:
+        raw = _extract_raw_event_timestamp(rec, dataset_kind)
+        if raw is not None:
+            return _classify_ts_representation(raw)
+    return "none"
 
-# Main extraction function
+
+def _search_first_event_ts(file_path: Path, dataset_kind: str, ts_repr: str, n_lines: int) -> Optional[int]:
+    """
+    Scan forward from file start for the first event timestamp.
+    Reads up to n_lines. Returns normalized nanoseconds or None.
+    """
+    with open(file_path, "r", encoding="utf-8", errors="replace") as f:
+        count = 0
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            count += 1
+            if count > n_lines:
+                break
+            rec, _ = _try_parse_line(line)
+            if rec is None:
+                continue
+            raw = _extract_raw_event_timestamp(rec, dataset_kind)
+            ts = _raw_ts_to_nanos(raw, dataset_kind, ts_repr)
+            if ts is not None:
+                return ts
+    return None
+
+def _search_last_event_ts(file_path: Path, dataset_kind: str, ts_repr: str,n_lines: int) -> Optional[int]:
+    """Scan backward from file end for the last event timestamp.
+    Reads up to n_lines from the tail. Returns normalized nanoseconds or None.
+    """
+    tail = _read_tail_lines(file_path, n_lines)
+    for raw_line in reversed(tail):
+        rec, _ = _try_parse_line(raw_line)
+        if rec is None:
+            continue
+        raw = _extract_raw_event_timestamp(rec, dataset_kind)
+        ts = _raw_ts_to_nanos(raw, dataset_kind, ts_repr)
+        if ts is not None:
+            return ts
+    return None
+
+def _search_first_realistic_ts(file_path: Path, dataset_kind: str, ts_repr: str) -> Optional[int]:
+    """Scan forward for the first event timestamp >= EARLIEST_TOLERATED_NS_TS."""
+    with open(file_path, "r", encoding="utf-8", errors="replace") as f:
+        count = 0
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            count += 1
+            if count > N_EXTENDED_SEARCH_LINES:
+                break
+            rec, _ = _try_parse_line(line)
+            if rec is None:
+                continue
+            raw = _extract_raw_event_timestamp(rec, dataset_kind)
+            ts = _raw_ts_to_nanos(raw, dataset_kind, ts_repr)
+            if ts is not None and ts >= EARLIEST_TOLERATED_NS_TS:
+                return ts
+    return None
+
+# -- Main extraction function --
 def extract_file_metadata(file_path: Path) -> dict:
     """
     Extract metadata from a single dataset json/jsonl file.
 
-    Reads only head and tail samples (N_SAMPLE_LINES each) 
-    Returns a dict of primitive-typed metadata fields.
+    Reads only head and tail samples (N_SAMPLE_LINES each), with extended
+    search (N_EXTENDED_SEARCH_LINES) if no event timestamp is found in the
+    initial samples.
+    
+    All timestamps in the returned dict are normalized to integer nanoseconds, regardless of whether the source file stores them as int, float, or ISO string.
+    args: 
+        file_path : Absolute path to the JSONL file as Path object.
 
-    file_path : Absolute path to the JSONL file as ÜPath object
-
-    Returns
-    dict with keys:
+    Returns dict with keys:
         path, file_size_bytes,
         dataset_kind, source_tag,
         first_timestamp_ns, last_timestamp_ns,
         first_realistic_ts_ns,
-        first_timestamp_iso, last_timestamp_iso,
-        timestamp_format, timestamp_resolution,
+        first_timestamp_iso, last_timestamp_iso, 
+        first_realistic_ts_iso,
+        timestamp_format, timestamp_resolution, ts_raw_representation,
         cdm_version, wrapper_style, source_field,
         uuid_case, likely_ordered, max_backward_jump_ns,
         seq_min, seq_max,
         trailing_comma_observed,
     """
-    from datetime import datetime, timezone
-
     rel_path = str(file_path.relative_to(DATA_RAW))
     dataset_kind = _detect_dataset_kind(rel_path)
     source_tag = _detect_source_tag(rel_path)
     file_size = file_path.stat().st_size
 
-    # Read head and tail samples
+    # - 1: Read head/tail samples, parse records -
     head_raw = _read_head_lines(file_path, N_SAMPLE_LINES)
     tail_raw = _read_tail_lines(file_path, N_SAMPLE_LINES)
 
-    # Parse all sampled lines
     head_records = []
     tail_records = []
     trailing_comma_observed = False
 
     for line in head_raw:
-        rec, needed_strip = _try_parse_line(line) # type: ignore
+        rec, needed_strip = _try_parse_line(line)
         if needed_strip:
             trailing_comma_observed = True
         if rec is not None:
             head_records.append(rec)
 
     for line in tail_raw:
-        rec, needed_strip = _try_parse_line(line) # type: ignore
+        rec, needed_strip = _try_parse_line(line)
         if needed_strip:
             trailing_comma_observed = True
         if rec is not None:
@@ -372,82 +490,109 @@ def extract_file_metadata(file_path: Path) -> dict:
 
     all_records = head_records + tail_records
 
-    # --- Timestamps ---
-    # Scan head forward for first event timestamp
+    # - 2: Detect timestamp representation -
+    ts_repr = _detect_ts_representation(all_records, dataset_kind)
+
+    # If no events in head+tail samples, try extended search just for representation
+    if ts_repr == "none":
+        print(f"  No events in head/tail samples, extending search for: {rel_path}", file=sys.stderr)
+        with open(file_path, "r", encoding="utf-8", errors="replace") as f:
+            count = 0
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                count += 1
+                if count > N_EXTENDED_SEARCH_LINES:
+                    break
+                rec, _ = _try_parse_line(line)
+                if rec is None:
+                    continue
+                raw = _extract_raw_event_timestamp(rec, dataset_kind)
+                if raw is not None:
+                    ts_repr = _classify_ts_representation(raw) if dataset_kind != "optc" else "iso8601"
+                    break
+
+    # - 3: Extract timestamps -
+    # First timestamp: scan head records, then extended if needed
     first_ts = None
     for rec in head_records:
-        ts = _extract_event_timestamp(rec, dataset_kind)
+        raw = _extract_raw_event_timestamp(rec, dataset_kind)
+        ts = _raw_ts_to_nanos(raw, dataset_kind, ts_repr)
         if ts is not None:
             first_ts = ts
             break
 
-    first_realistic_ts = None
-    if first_ts and first_ts < EARLIEST_TOLERATED_NS_TS:
-        print(f"  Handling faulty start timestamp in: {rel_path}", file=sys.stderr)
-        ts_lashout_records_raw = _read_head_lines(file_path, N_TIMESTAMP_TRY_HARDER_LINES)
-        first_realistic_ts = 0 
-        for ts_lashout_line in ts_lashout_records_raw:
-            ts_lashout_rec, _ = _try_parse_line(ts_lashout_line) # type: ignore        
-            ts = _extract_event_timestamp(ts_lashout_rec, dataset_kind)
-            if ts is not None and ts > EARLIEST_TOLERATED_NS_TS:
-                first_realistic_ts = ts
-                break
+    if first_ts is None:
+        print(f"  No event ts in first {N_SAMPLE_LINES} lines, extending for: {rel_path}", file=sys.stderr)
+        first_ts = _search_first_event_ts(file_path, dataset_kind, ts_repr, N_EXTENDED_SEARCH_LINES)
+        if first_ts is None:
+            print(f"  No event ts found in first {N_EXTENDED_SEARCH_LINES} lines.", file=sys.stderr)
 
-        if first_realistic_ts == 0:
-            print(f"  Could not find good ts within {N_TIMESTAMP_TRY_HARDER_LINES} records.", file=sys.stderr)
-
-    else: 
-        first_realistic_ts = first_ts
-
-    # Scan tail backward for last event timestamp
+    # Last timestamp: scan tail records, then extended if needed
     last_ts = None
     for rec in reversed(tail_records):
-        ts = _extract_event_timestamp(rec, dataset_kind)
+        raw = _extract_raw_event_timestamp(rec, dataset_kind)
+        ts = _raw_ts_to_nanos(raw, dataset_kind, ts_repr)
         if ts is not None:
             last_ts = ts
             break
 
-    # Collect all timestamps from samples for ordering check and resolution
+    if last_ts is None:
+        last_ts = _search_last_event_ts(file_path, dataset_kind, ts_repr, N_EXTENDED_SEARCH_LINES)
+
+    # First realistic timestamp: skip bogus early timestamps
+    first_realistic_ts = None
+    if first_ts is not None and first_ts < EARLIEST_TOLERATED_NS_TS:
+        print(f"  First ts {first_ts} is pre-2015, searching for realistic start: {rel_path}", file=sys.stderr)
+        first_realistic_ts = _search_first_realistic_ts(file_path, dataset_kind, ts_repr)
+        if first_realistic_ts is None:
+            print(f"  Could not find realistic ts within {N_EXTENDED_SEARCH_LINES} lines.", file=sys.stderr)
+    else:
+        first_realistic_ts = first_ts
+
+    # - 4: Collect sample timestamps for ordering+resolution 
     head_timestamps = []
     for rec in head_records:
-        ts = _extract_event_timestamp(rec, dataset_kind)
+        raw = _extract_raw_event_timestamp(rec, dataset_kind)
+        ts = _raw_ts_to_nanos(raw, dataset_kind, ts_repr)
         if ts is not None:
             head_timestamps.append(ts)
 
     tail_timestamps = []
     for rec in reversed(tail_records):
-        ts = _extract_event_timestamp(rec, dataset_kind)
+        raw = _extract_raw_event_timestamp(rec, dataset_kind)
+        ts = _raw_ts_to_nanos(raw, dataset_kind, ts_repr)
         if ts is not None:
             tail_timestamps.append(ts)
     tail_timestamps.reverse()
 
     # Deduplicate if head and tail overlap (small files)
-    # Detect overlap: if file has fewer lines than 2*N_SAMPLE_LINES, head and tail share lines.
-    # Use raw line content to deduplicate.
     if len(head_raw) < N_SAMPLE_LINES:
-        # File has fewer lines than one sample — tail is a subset of head, just use head
         all_timestamps = head_timestamps
         tail_timestamps = []
     else:
         all_timestamps = head_timestamps + tail_timestamps
 
-    # Ordering check on head and tail separately
+    # Ordering check
     head_ordered, head_max_bw = _check_ordering(head_timestamps)
     tail_ordered, tail_max_bw = _check_ordering(tail_timestamps)
-    # Also check that tail starts after head ends (global ordering)
     global_ordered = True
     global_bw = 0
     if head_timestamps and tail_timestamps:
         gap = tail_timestamps[0] - head_timestamps[-1]
-        if gap < -10_000_000_000:
+        if gap < -10 * NS_PER_SEC:
             global_ordered = False
             global_bw = -gap
 
     likely_ordered = head_ordered and tail_ordered and global_ordered
     max_backward_jump = max(head_max_bw, tail_max_bw, global_bw)
 
-    # Timestamp resolution
+    # Timestamp resolution (on normalized nanos)
     ts_resolution = _infer_timestamp_resolution(all_timestamps, dataset_kind)
+    # For float_nanos, resolution cannot be better than microseconds
+    if ts_repr == "float_nanos" and ts_resolution == "nanoseconds":
+        ts_resolution = "microseconds_or_worse"
 
     # Timestamp format
     if dataset_kind == "optc":
@@ -462,20 +607,15 @@ def extract_file_metadata(file_path: Path) -> dict:
         dt = datetime.fromtimestamp(ns / 1e9, tz=timezone.utc)
         return dt.isoformat()
 
-    # --- Schema / structure ---
+    # - 5: Schema / structure -
     cdm_version = None
     wrapper_style = None
     if all_records:
         cdm_version = _extract_cdm_version(all_records[0])
         wrapper_style = _extract_wrapper_style(all_records[0], dataset_kind)
 
-    # Source field
     source_field = _extract_source_field(all_records, dataset_kind)
-
-    # UUID case
     uuid_case = _check_uuid_case(all_records, dataset_kind)
-
-    # Sequence range
     seq_range = _extract_sequence_range(all_records, dataset_kind)
 
     return {
@@ -488,8 +628,10 @@ def extract_file_metadata(file_path: Path) -> dict:
         "first_realistic_ts_ns": first_realistic_ts,
         "first_timestamp_iso": nanos_to_iso(first_ts),
         "last_timestamp_iso": nanos_to_iso(last_ts),
+        "first_realistic_ts_iso": nanos_to_iso(first_realistic_ts),
         "timestamp_format": ts_format,
         "timestamp_resolution": ts_resolution,
+        "ts_raw_representation": ts_repr,
         "cdm_version": cdm_version,
         "wrapper_style": wrapper_style,
         "source_field": source_field,
@@ -502,16 +644,15 @@ def extract_file_metadata(file_path: Path) -> dict:
     }
 
 
-
-# Loop / batch extraction
+# -- Loop / batch extraction --
 def list_dataset_files(dataset: str, sub: str) -> list[Path]:
     """List all JSONL files for a dataset+sub combination.
 
-    dataset:One of 'e3', 'e5', 'optc'.
-    sub: e.g. for e3/e5: one of 'cadets', 'clearscope', 'fivedirections', 'theia', 'trace', 'marple'.
-         e.g. for optc: one of the AIA group names like 'AIA-51-75', 'AIA-201-225', etc.
+    dataset: One of 'e3', 'e5', 'optc'.
+    sub: e.g. for e3/e5: 'cadets', 'clearscope', 'fivedirections', 'theia', 'trace', 'marple'.
+         e.g. for optc: 'AIA-51-75', 'AIA-201-225', etc.
 
-    Returns list[Path]: list of absolute file paths; sorted by first timestamp.
+    Returns list[Path]: sorted list of absolute file paths.
     """
     if dataset == "e3":
         root = DATA_RAW / "Engagement3" / sub
@@ -531,7 +672,6 @@ def list_dataset_files(dataset: str, sub: str) -> list[Path]:
             continue
         if ".tar" in name or ".gz" in name:
             continue
-        # For OpTC, filter to the requested AIA group
         if dataset == "optc":
             if sub not in str(path):
                 continue
@@ -541,23 +681,8 @@ def list_dataset_files(dataset: str, sub: str) -> list[Path]:
 
 def build_file_registry(dataset: str, sub: str) -> list[dict]:
     """Build metadata registry for all files in a dataset+sub combination.
-    dataset: One of 'e3', 'e5', 'optc'.
-    sub: Sub-dataset identifier 
 
-    Returns
-    list[dict] : list of metadata dicts, one per file, ordered by first_timestamp_ns.
-
-    list of dicts with keys:
-        path, file_size_bytes,
-        dataset_kind, source_tag,
-        first_timestamp_ns, last_timestamp_ns,
-        first_realistic_ts_ns,
-        first_timestamp_iso, last_timestamp_iso,
-        timestamp_format, timestamp_resolution,
-        cdm_version, wrapper_style, source_field,
-        uuid_case, likely_ordered, max_backward_jump_ns,
-        seq_min, seq_max,
-        trailing_comma_observed,
+    Returns list[dict]: one per file, ordered by first_realistic_ts_ns.
     """
     files = list_dataset_files(dataset, sub)
     print(f"Found {len(files)} files for {dataset}/{sub}", file=sys.stderr)
@@ -569,7 +694,7 @@ def build_file_registry(dataset: str, sub: str) -> list[dict]:
             meta = extract_file_metadata(fpath)
             registry.append(meta)
             elapsed = time.time() - t0
-            ts_info = meta["first_timestamp_iso"] or "no_timestamp"
+            ts_info = meta["first_realistic_ts_iso"] or meta["first_timestamp_iso"] or "no_timestamp"
             print(f"  [{i+1}/{len(files)}] {fpath.name} -> {ts_info} ({elapsed:.1f}s)", file=sys.stderr)
         except Exception as e:
             print(f"  [{i+1}/{len(files)}] {fpath.name} -> ERROR: {e}", file=sys.stderr)
@@ -578,18 +703,13 @@ def build_file_registry(dataset: str, sub: str) -> list[dict]:
                 "error": str(e),
             })
 
-    # Sort by first timestamp
     registry.sort(key=lambda m: (m.get("first_realistic_ts_ns") is None, m.get("first_realistic_ts_ns", 0)))
-
     return registry
-
 
 
 # print for copy-paste into registry module
 def print_registry_for_copypaste(dataset: str, sub: str):
-    """
-    Run metadata extraction and print as a Python dict literal ready for copy-paste.
-    """
+    """Run metadata extraction and print as a Python dict literal ready for copy-paste."""
     registry = build_file_registry(dataset, sub)
     var_name = f"REGISTRY_{dataset.upper()}_{sub.upper().replace('-', '_')}"
 
