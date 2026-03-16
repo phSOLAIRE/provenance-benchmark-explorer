@@ -2,6 +2,9 @@
 FILE ANNOTATIONS
 These functions are used to extract start / end timestamps, size of files and other useful metadata.
 Mainly these functions are helpful for building the registry data structures for the individual datasets.
+
+function for specific file: extract_file_metadata(<path>)
+function for list of all files in dataset: build_file_registry(<dataset>, <sub dataset>)
 """
 
 import json
@@ -10,6 +13,7 @@ import sys
 import time
 from pathlib import Path
 from typing import Optional
+from datetime import datetime
 
 from provenance_explorer.registry.repo_paths import DATA_RAW
 
@@ -17,8 +21,11 @@ from provenance_explorer.registry.repo_paths import DATA_RAW
 CDM18_EVENT_KEY = "com.bbn.tc.schema.avro.cdm18.Event"
 CDM20_EVENT_KEY = "com.bbn.tc.schema.avro.cdm20.Event"
 EVENT_KEYS = [CDM18_EVENT_KEY, CDM20_EVENT_KEY]
+NS_PER_SEC = 1_000_000_000
+EARLIEST_TOLERATED_NS_TS = datetime.fromisoformat("2015-01-01").timestamp() * NS_PER_SEC
 
 N_SAMPLE_LINES = 100 
+N_TIMESTAMP_TRY_HARDER_LINES = 1_000_000
 TAIL_CHUNK_SIZE = 1024 * 1024
 
 
@@ -171,16 +178,6 @@ def _read_tail_lines(file_path: Path, n: int) -> list[str]:
     lines.reverse()
     return lines
 
-# def _estimate_line_count(file_path: Path, sample_lines: list[str], file_size: int) -> int:
-#     """Estimate line count from average line length of sample lines."""
-#     if not sample_lines:
-#         return 0
-#     # +1 for newline character per line
-#     avg_bytes = sum(len(line.encode("utf-8")) + 1 for line in sample_lines) / len(sample_lines)
-#     if avg_bytes == 0:
-#         return 0
-#     return int(file_size / avg_bytes)
-
 def _check_uuid_case(records: list[dict], dataset_kind: str) -> str:
     """Check UUID casing across sampled records. Returns 'lower', 'upper', or 'mixed'."""
     import re
@@ -332,9 +329,10 @@ def extract_file_metadata(file_path: Path) -> dict:
 
     Returns
     dict with keys:
-        path, file_size_bytes,  (--est_line_count,--)
+        path, file_size_bytes,
         dataset_kind, source_tag,
         first_timestamp_ns, last_timestamp_ns,
+        first_realistic_ts_ns,
         first_timestamp_iso, last_timestamp_iso,
         timestamp_format, timestamp_resolution,
         cdm_version, wrapper_style, source_field,
@@ -382,6 +380,24 @@ def extract_file_metadata(file_path: Path) -> dict:
         if ts is not None:
             first_ts = ts
             break
+
+    first_realistic_ts = None
+    if first_ts and first_ts < EARLIEST_TOLERATED_NS_TS:
+        print(f"  Handling faulty start timestamp in: {rel_path}", file=sys.stderr)
+        ts_lashout_records_raw = _read_head_lines(file_path, N_TIMESTAMP_TRY_HARDER_LINES)
+        first_realistic_ts = 0 
+        for ts_lashout_line in ts_lashout_records_raw:
+            ts_lashout_rec, _ = _try_parse_line(ts_lashout_line) # type: ignore        
+            ts = _extract_event_timestamp(ts_lashout_rec, dataset_kind)
+            if ts is not None and ts > EARLIEST_TOLERATED_NS_TS:
+                first_realistic_ts = ts
+                break
+
+        if first_realistic_ts == 0:
+            print(f"  Could not find good ts within {N_TIMESTAMP_TRY_HARDER_LINES} records.", file=sys.stderr)
+
+    else: 
+        first_realistic_ts = first_ts
 
     # Scan tail backward for last event timestamp
     last_ts = None
@@ -462,18 +478,14 @@ def extract_file_metadata(file_path: Path) -> dict:
     # Sequence range
     seq_range = _extract_sequence_range(all_records, dataset_kind)
 
-    # Estimated line count
-    all_raw = head_raw + tail_raw
-    # est_lines = _estimate_line_count(file_path, all_raw, file_size)
-
     return {
         "path": rel_path,
         "file_size_bytes": file_size,
-        # "est_line_count": est_lines,
         "dataset_kind": dataset_kind,
         "source_tag": source_tag,
         "first_timestamp_ns": first_ts,
         "last_timestamp_ns": last_ts,
+        "first_realistic_ts_ns": first_realistic_ts,
         "first_timestamp_iso": nanos_to_iso(first_ts),
         "last_timestamp_iso": nanos_to_iso(last_ts),
         "timestamp_format": ts_format,
@@ -495,17 +507,11 @@ def extract_file_metadata(file_path: Path) -> dict:
 def list_dataset_files(dataset: str, sub: str) -> list[Path]:
     """List all JSONL files for a dataset+sub combination.
 
-    Parameters
-    ----------
-    dataset : str
-        One of 'e3', 'e5', 'optc'.
-    sub : str
-        For e3/e5: one of 'cadets', 'clearscope', 'fivedirections', 'theia', 'trace', 'marple'.
-        For optc: one of the AIA group names like 'AIA-51-75', 'AIA-201-225', etc.
+    dataset:One of 'e3', 'e5', 'optc'.
+    sub: e.g. for e3/e5: one of 'cadets', 'clearscope', 'fivedirections', 'theia', 'trace', 'marple'.
+         e.g. for optc: one of the AIA group names like 'AIA-51-75', 'AIA-201-225', etc.
 
-    Returns
-    -------
-    list[Path] : sorted list of absolute file paths.
+    Returns list[Path]: list of absolute file paths; sorted by first timestamp.
     """
     if dataset == "e3":
         root = DATA_RAW / "Engagement3" / sub
@@ -540,6 +546,18 @@ def build_file_registry(dataset: str, sub: str) -> list[dict]:
 
     Returns
     list[dict] : list of metadata dicts, one per file, ordered by first_timestamp_ns.
+
+    list of dicts with keys:
+        path, file_size_bytes,
+        dataset_kind, source_tag,
+        first_timestamp_ns, last_timestamp_ns,
+        first_realistic_ts_ns,
+        first_timestamp_iso, last_timestamp_iso,
+        timestamp_format, timestamp_resolution,
+        cdm_version, wrapper_style, source_field,
+        uuid_case, likely_ordered, max_backward_jump_ns,
+        seq_min, seq_max,
+        trailing_comma_observed,
     """
     files = list_dataset_files(dataset, sub)
     print(f"Found {len(files)} files for {dataset}/{sub}", file=sys.stderr)
@@ -561,7 +579,7 @@ def build_file_registry(dataset: str, sub: str) -> list[dict]:
             })
 
     # Sort by first timestamp
-    registry.sort(key=lambda m: (m.get("first_timestamp_ns") is None, m.get("first_timestamp_ns", 0)))
+    registry.sort(key=lambda m: (m.get("first_realistic_ts_ns") is None, m.get("first_realistic_ts_ns", 0)))
 
     return registry
 
