@@ -257,7 +257,7 @@ def _extract_source_field(records: list[dict], dataset_kind: str) -> Optional[st
 def _check_ordering(timestamps: list[int]) -> tuple[bool, int]:
     """Check if timestamps are approximately ordered.
     Returns (is_ordered, max_backward_jump_ns).
-    is_ordered is True if no backward jump exceeds 1 second.
+    is_ordered is True if no backward jump exceeds 10 seconds.
     """
     if len(timestamps) < 2:
         return True, 0
@@ -266,8 +266,8 @@ def _check_ordering(timestamps: list[int]) -> tuple[bool, int]:
         diff = timestamps[i] - timestamps[i - 1]
         if diff < 0:
             max_backward = max(max_backward, -diff)
-    # 1 second tolerance
-    return max_backward <= 1_000_000_000, max_backward
+    # 10 second tolerance
+    return max_backward <= 10_000_000_000, max_backward
 
 def _infer_timestamp_resolution(timestamps: list[int], dataset_kind: str) -> str:
     """Infer the effective timestamp resolution from a set of timestamps.
@@ -439,7 +439,7 @@ def extract_file_metadata(file_path: Path) -> dict:
     global_bw = 0
     if head_timestamps and tail_timestamps:
         gap = tail_timestamps[0] - head_timestamps[-1]
-        if gap < -1_000_000_000:
+        if gap < -10_000_000_000:
             global_ordered = False
             global_bw = -gap
 
