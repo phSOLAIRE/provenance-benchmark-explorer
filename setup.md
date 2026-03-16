@@ -18,6 +18,9 @@ module load miniforge3/24.3.0-0
 conda env create -f environment.yml
 conda activate provenance-explorer
 ```
+
+The environment installs the repository itself in editable mode so the provenance_explorer package is importable.
+
 ### Workspace Reservation
 
 Extension of the below workspaces beyond 30 days is done with `ws_extend raw <days>` (or `ws_extend neo4j <days>`).

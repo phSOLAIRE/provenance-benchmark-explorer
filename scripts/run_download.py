@@ -11,8 +11,8 @@ Usage:
 import argparse
 import sys
 
-from src.download.gdrive import gdrive_auth
-from src.download.darpa_downloads import (
+from provenance_explorer.download.gdrive import gdrive_auth
+from provenance_explorer.download.darpa_downloads import (
     # E3
     download_e3_tar_gz_from_gdrive,
     extract_all_e3_tar_gz_to_jsonl,

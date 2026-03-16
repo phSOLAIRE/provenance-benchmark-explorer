@@ -1,0 +1,8 @@
+[project]
+name = "provenance-explorer"
+version = "0.1.0"
+description = "DARPA provenance dataset tooling"
+requires-python = ">=3.14"
+
+[tool.setuptools.packages.find]
+where = ["src"]

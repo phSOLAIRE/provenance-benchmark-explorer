@@ -15,9 +15,9 @@ import tempfile
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from google.oauth2.credentials import Credentials
 
-import src.registry.darpa_registry as darpa_registry
-from src.download.gdrive import list_items_recursive, download_file_to_path
-from src.registry.repo_paths import DATA_RAW
+import provenance_explorer.registry.darpa_registry as darpa_registry
+from provenance_explorer.download.gdrive import list_items_recursive, download_file_to_path
+from provenance_explorer.registry.repo_paths import DATA_RAW
 
 
 # ============================================

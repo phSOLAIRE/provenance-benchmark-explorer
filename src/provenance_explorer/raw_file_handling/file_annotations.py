@@ -11,7 +11,7 @@ import time
 from pathlib import Path
 from typing import Optional
 
-from src.registry.repo_paths import DATA_RAW
+from provenance_explorer.registry.repo_paths import DATA_RAW
 
 # Event keys across CDM versions
 CDM18_EVENT_KEY = "com.bbn.tc.schema.avro.cdm18.Event"
