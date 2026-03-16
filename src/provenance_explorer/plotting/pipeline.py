@@ -83,23 +83,25 @@ class PlotPipeline(ArtifactCache):
         self.save(data, **kwargs)
         return data
 
-    def plot(self, **kwargs: Any) -> Figure:
+    def plot(self, override_plot_size: tuple[float,float] | None = None, **kwargs: Any) -> Figure:
         """Load cached data and render the plot (no data retrieval)."""
         data = self.load(**kwargs) 
         fig = self.make_plot(data, **kwargs)
-        self._save_figure(fig, **kwargs)
+        self._save_figure(fig,override_plot_size, **kwargs)
         return fig
 
-    def run(self, **kwargs: Any) -> Figure:
+    def run(self, override_plot_size: tuple[float,float] | None = None, **kwargs: Any) -> Figure:
         """Full pipeline: ensure data exists -> plot _> save figure."""
         data = self.data_retrieval(**kwargs)
         fig = self.make_plot(data, **kwargs)
-        self._save_figure(fig, **kwargs)
+        self._save_figure(fig, override_plot_size, **kwargs)
         return fig
 
-    def _save_figure(self, fig: Figure, **kwargs: Any) -> None:
+    def _save_figure(self, fig: Figure, override_plot_size: tuple[float,float] | None = None, **kwargs: Any) -> None:
         path = self.figure_path(**kwargs)
         path.parent.mkdir(parents=True, exist_ok=True)
+        if override_plot_size:
+            fig.set_size_inches(override_plot_size)
         fig.savefig(path)
         print(f"[figure]     {path}")
 
