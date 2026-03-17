@@ -1,3 +1,18 @@
+"""
+E5 Dataset metadata as lists of dicts with keys: 
+        path, file_size_bytes,
+        dataset_kind, source_tag,
+        first_timestamp_ns, last_timestamp_ns,
+        first_realistic_ts_ns,
+        first_timestamp_iso, last_timestamp_iso, 
+        first_realistic_ts_iso,
+        timestamp_format, timestamp_resolution, ts_raw_representation,
+        cdm_version, wrapper_style, source_field,
+        uuid_case, likely_ordered, max_backward_jump_ns,
+        seq_min, seq_max,
+        trailing_comma_observed,
+"""
+
 # ------- E5 CADETS -------
 REGISTRY_E5_CADETS = [
     {
@@ -30657,11 +30672,11 @@ REGISTRY_E5_TRACE = [
 ]
 # ------------------------
 
-E5_ALL = [
-    REGISTRY_E5_CADETS,
-    REGISTRY_E5_CLEARSCOPE,
-    REGISTRY_E5_FIVEDIRECTIONS,
-    REGISTRY_E5_MARPLE,
-    REGISTRY_E5_THEIA,
-    REGISTRY_E5_TRACE,
-]
+E5_ALL = {
+    "cadets": REGISTRY_E5_CADETS,
+    "clearscope": REGISTRY_E5_CLEARSCOPE,
+    "fivedirections": REGISTRY_E5_FIVEDIRECTIONS,
+    "marple": REGISTRY_E5_MARPLE,
+    "theia": REGISTRY_E5_THEIA,
+    "trace": REGISTRY_E5_TRACE,
+}

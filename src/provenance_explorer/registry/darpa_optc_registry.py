@@ -1,3 +1,18 @@
+"""
+OpTC Dataset metadata as lists of dicts with keys: 
+        path, file_size_bytes,
+        dataset_kind, source_tag,
+        first_timestamp_ns, last_timestamp_ns,
+        first_realistic_ts_ns,
+        first_timestamp_iso, last_timestamp_iso, 
+        first_realistic_ts_iso,
+        timestamp_format, timestamp_resolution, ts_raw_representation,
+        cdm_version, wrapper_style, source_field,
+        uuid_case, likely_ordered, max_backward_jump_ns,
+        seq_min, seq_max,
+        trailing_comma_observed,
+"""
+
 # ------- OpTC AIA-51-75 -------
 REGISTRY_OPTC_AIA_51_75 = [
     {
@@ -1698,9 +1713,9 @@ REGISTRY_OPTC_AIA_951_975 = [
 ]
 # --------------------------------
 
-OPTC_ALL = [
-    REGISTRY_OPTC_AIA_51_75,
-    REGISTRY_OPTC_AIA_201_225,
-    REGISTRY_OPTC_AIA_501_525,
-    REGISTRY_OPTC_AIA_951_975,
-]
+OPTC_ALL = {
+    "AIA-51-75": REGISTRY_OPTC_AIA_51_75,
+    "AIA-201-225": REGISTRY_OPTC_AIA_201_225,
+    "AIA-501-525": REGISTRY_OPTC_AIA_501_525,
+    "AIA-951-975": REGISTRY_OPTC_AIA_951_975,
+}
