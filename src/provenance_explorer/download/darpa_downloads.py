@@ -15,7 +15,7 @@ import tempfile
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from google.oauth2.credentials import Credentials
 
-import provenance_explorer.registry.darpa_registry as darpa_registry
+import provenance_explorer.registry.darpa_e3_registry as darpa_e3_registry
 from provenance_explorer.download.gdrive import list_items_recursive, download_file_to_path
 from provenance_explorer.registry.repo_paths import DATA_RAW
 
@@ -151,11 +151,11 @@ def check_e3_json_present() -> List:
     """
     missing_files = []
     registries = [
-        getattr(darpa_registry, "e3_cadets_file_info"),
-        getattr(darpa_registry, "e3_clearscope_file_info"),
-        getattr(darpa_registry, "e3_fivedirections_file_info"),
-        getattr(darpa_registry, "e3_theia_file_info"),
-        getattr(darpa_registry, "e3_trace_file_info"),
+        getattr(darpa_e3_registry, "REGISTRY_E3_CADETS"),
+        getattr(darpa_e3_registry, "REGISTRY_E3_CLEARSCOPE"),
+        getattr(darpa_e3_registry, "REGISTRY_E3_FIVEDIRECTIONS"),
+        getattr(darpa_e3_registry, "REGISTRY_E3_THEIA"),
+        getattr(darpa_e3_registry, "REGISTRY_E3_TRACE"),
     ]
     for registry in registries:
         for file in registry:

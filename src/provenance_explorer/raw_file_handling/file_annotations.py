@@ -707,17 +707,20 @@ def build_file_registry(dataset: str, sub: str) -> list[dict]:
     return registry
 
 
-# print for copy-paste into registry module
-def print_registry_for_copypaste(dataset: str, sub: str):
-    """Run metadata extraction and print as a Python dict literal ready for copy-paste."""
+# string for copy-paste into registry modules
+def registry_string_for_copypaste(dataset: str, sub: str) -> str:
+    """Run metadata extraction and return a Python dict literal as a string."""
     registry = build_file_registry(dataset, sub)
     var_name = f"REGISTRY_{dataset.upper()}_{sub.upper().replace('-', '_')}"
 
-    print(f"\n{var_name} = [")
+    lines = []
+    lines.append(f"\n{var_name} = [")
     for entry in registry:
-        print("    {")
+        lines.append("    {")
         for k, v in entry.items():
-            print(f"        {k!r}: {v!r},")
-        print("    },")
-    print("]")
-    print(f"\n# {len(registry)} files total")
+            lines.append(f"        {k!r}: {v!r},")
+        lines.append("    },")
+    lines.append("]")
+    lines.append(f"\n# {len(registry)} files total")
+
+    return "\n".join(lines)
