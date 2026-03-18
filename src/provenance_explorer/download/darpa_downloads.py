@@ -17,7 +17,7 @@ from google.oauth2.credentials import Credentials
 
 import provenance_explorer.registry.darpa_e3_registry as darpa_e3_registry
 from provenance_explorer.download.gdrive import list_items_recursive, download_file_to_path
-from provenance_explorer.registry.repo_paths import DATA_RAW
+from provenance_explorer.registry.registry_all import DATA_RAW
 
 
 # ============================================

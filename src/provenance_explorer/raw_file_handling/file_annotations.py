@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Optional
 from datetime import datetime, timezone, timedelta
 
-from provenance_explorer.registry.repo_paths import DATA_RAW
+from provenance_explorer.registry.registry_all import DATA_RAW
 
 # -- Constants --
 # Known CDM event keys (fully qualified).

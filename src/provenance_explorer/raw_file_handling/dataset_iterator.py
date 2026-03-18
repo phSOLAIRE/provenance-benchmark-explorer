@@ -32,7 +32,7 @@ from typing import (
     Sequence,
     TypeVar,
 )
-from provenance_explorer.registry.repo_paths import DATA_RAW
+from provenance_explorer.registry.registry_all import DATA_RAW
 logger = logging.getLogger(__name__)
 
 T = TypeVar("T")

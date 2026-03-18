@@ -19,7 +19,7 @@ from typing import Any
 
 import pandas as pd
 
-from provenance_explorer.registry.repo_paths import CACHE_ROOT
+from provenance_explorer.registry.registry_all import CACHE_ROOT
 
 
 class ArtifactCache(ABC):

@@ -34,7 +34,7 @@ import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 
 from provenance_explorer.plotting.cache import ArtifactCache
-from provenance_explorer.registry.repo_paths import FIGURES_ROOT
+from provenance_explorer.registry.registry_all import FIGURES_ROOT
 
 
 class PlotPipeline(ArtifactCache):
