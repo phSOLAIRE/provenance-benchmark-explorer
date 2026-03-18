@@ -1,0 +1,7 @@
+# nothing in the name field, all events of these types only give minimal information
+{'EVENT_READ': {},
+ 'EVENT_RECVFROM': {},
+ 'EVENT_RECVMSG': {},
+ 'EVENT_SENDMSG': {},
+ 'EVENT_SENDTO': {},
+ 'EVENT_WRITE': {}}
