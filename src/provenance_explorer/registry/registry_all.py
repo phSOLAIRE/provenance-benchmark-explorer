@@ -18,7 +18,7 @@ CACHE_ROOT = WORK / "provenance-explorer-cache"
 # Plot output
 FIGURES_ROOT = REPO_ROOT / "img" / "figures" 
 
-def get_registry(dataset: str, sub_dataset: str) -> list[dict]: 
+def get_subdataset_registry(dataset: str, sub_dataset: str) -> list[dict]: 
     match dataset:
         case "e3": 
             return E3_ALL[sub_dataset]
@@ -26,5 +26,16 @@ def get_registry(dataset: str, sub_dataset: str) -> list[dict]:
             return E5_ALL[sub_dataset]
         case "optc":
             return OPTC_ALL[sub_dataset]
+        case _:
+            raise
+
+def get_big_registry(dataset: str) -> dict: 
+    match dataset:
+        case "e3": 
+            return E3_ALL
+        case "e5":
+            return E5_ALL
+        case "optc":
+            return OPTC_ALL
         case _:
             raise
