@@ -1,6 +1,7 @@
 dummy**
 token.json
 client_secret.json
+slurm-out/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

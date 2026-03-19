@@ -42,59 +42,16 @@ from provenance_explorer.raw_file_handling.parsing_helpers import TS_EXTRACTORS,
 from pprint import pprint
 from multiprocessing import Pool
 
-def __cdm20_types_and_subtypes_dict() -> dict[str, dict[str, dict[str, int]]]:
-    all_cdm20_registry = get_big_registry("e5")
-    out: dict[str, dict[str, dict[str, int]]] = {}
-
-    for subdataset_name, subdataset_registry in all_cdm20_registry.items():
-        print(f"\t[processing sub dataset] {subdataset_name}")
-        ts_extr = TS_EXTRACTORS[("e5", subdataset_name)]  # we do not need the timestamps here, so when not doing test runs, replace with lambda _: None
-        parser = PARSERS[("e5", subdataset_name)]
-        iterator = make_dataset_iterator(
-            registry=subdataset_registry,
-            ts_extractor=ts_extr,
-            parse_fn=parser,
-            test_run_seconds=60*10,  # remove later & switch ts_extr for something faster
-        )
-
-        counts: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
-
-        for ts, record in iterator: 
-            record = record["datum"]
-            record_type = next(iter(record.keys()))
-            record_type_short = record_type.rsplit('.', 1)[-1]
-
-            match record_type_short:
-                case record_type_short if record_type_short in [
-                    "Event", "FileObject", "Principal", "SrcSinkObject", "Subject", "IpcObject",
-                ]:
-                    subtype = record[record_type]["type"]
-                    counts[record_type_short][subtype] += 1
-
-                case record_type_short if record_type_short in ["Host"]:
-                    subtype = record[record_type]["hostType"]
-                    counts[record_type_short][subtype] += 1
-
-                case record_type_short if record_type_short in [
-                    "NetFlowObject", "UnnamedPipeObject", "ProvenanceTagNode", "UnitDependency",
-                    "StartMarker", "TimeMarker", "EndMarker", "MemoryObject", "RegistryKeyObject",
-                ]:
-                    counts[record_type_short][record_type_short] += 1
-
-                case _:
-                    pprint(record)
-                    raise Exception(f"no type {record_type_short} handled")
-                
-        out[subdataset_name] = {k: dict(v) for k, v in counts.items()}
-
-    return out
-
 def _process_one_subdataset_cdm20(
-    args: tuple[str, Any],
+    subdataset_name: str,
 ) -> tuple[str, dict[str, dict[str, int]]]:
-    """Worker function for one sub-dataset. Must be top-level for pickling."""
-    subdataset_name, subdataset_registry = args
+    """
+    Worker function for one sub-dataset. Must be top-level for pickling.
+    Rebuilds the registry internally to avoid pickling complex objects.
+    """
     print(f"\t[processing sub dataset] {subdataset_name}")
+    all_cdm20_registry = get_big_registry("e5")
+    subdataset_registry = all_cdm20_registry[subdataset_name]
     ts_extr = TS_EXTRACTORS[("e5", subdataset_name)]
     parser = PARSERS[("e5", subdataset_name)]
     iterator = make_dataset_iterator(
@@ -131,12 +88,12 @@ def _process_one_subdataset_cdm20(
             
     return subdataset_name, {k: dict(v) for k, v in counts.items()}
 
-
-def _cdm20_types_and_subtypes_dict() -> dict[str, dict[str, dict[str, int]]]:
+def _cdm20_types_and_subtypes_dict(n_workers: int = 8) -> dict[str, dict[str, dict[str, int]]]:
     all_cdm20_registry = get_big_registry("e5")
-    args = list(all_cdm20_registry.items())
-    with Pool() as pool:
-        results = pool.map(_process_one_subdataset_cdm20, args)
+    subdataset_names = list(all_cdm20_registry.keys())
+    print(f"\t[multiprocessing] {len(subdataset_names)} sub-datasets with {n_workers} workers")
+    with Pool(processes=n_workers) as pool:
+        results = pool.map(_process_one_subdataset_cdm20, subdataset_names)
     return dict(results)
         
 def _cdm18_types_and_subtypes_dict() -> dict[str, dict[str, dict[str, int]]]:
