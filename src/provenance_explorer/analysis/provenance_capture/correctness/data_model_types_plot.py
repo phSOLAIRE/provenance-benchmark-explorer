@@ -52,13 +52,13 @@ def _process_one_subdataset_cdm20(
     print(f"\t[processing sub dataset] {subdataset_name}")
     all_cdm20_registry = get_big_registry("e5")
     subdataset_registry = all_cdm20_registry[subdataset_name]
-    ts_extr = TS_EXTRACTORS[("e5", subdataset_name)]
+    ts_extr = lambda _: None # TS_EXTRACTORS[("e5", subdataset_name)] # for non-test runs use lambda _: None
     parser = PARSERS[("e5", subdataset_name)]
     iterator = make_dataset_iterator(
         registry=subdataset_registry,
         ts_extractor=ts_extr,
         parse_fn=parser,
-        test_run_seconds=60 * 10,
+        # test_run_seconds=5,
     )
     counts: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
     for ts, record in iterator:
@@ -144,6 +144,33 @@ def _cdm18_types_and_subtypes_dict() -> dict[str, dict[str, dict[str, int]]]:
 
     return out
 
+def _ecar_types_and_subtypes_dict() -> dict[str, dict[str, dict[str, int]]]:
+    all_opt_registry = get_big_registry("optc")
+    out: dict[str, dict[str, dict[str, int]]] = {}
+
+    for subdataset_name, subdataset_registry in all_opt_registry.items():
+        print(f"\t[processing sub dataset] {subdataset_name}")
+        ts_extr = lambda _: None # TS_EXTRACTORS[("optc", subdataset_name)]  # we do not need the timestamps here, so when not doing test runs, replace with lambda _: None
+        parser = PARSERS[("optc", subdataset_name)]
+        iterator = make_dataset_iterator(
+            registry=subdataset_registry,
+            ts_extractor=ts_extr,
+            parse_fn=parser,
+            # test_run_seconds=600,  # remove later & switch ts extractor for something faster
+        )
+
+        counts: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
+
+        # optc definetly has the superior data model
+        for _, record in iterator: 
+            object = record["object"]
+            action = record["action"]
+            counts[object][action] += 1
+
+        out[subdataset_name] = {k: dict(v) for k, v in counts.items()}
+
+    return out
+
 def _build_percentage_table(
     data: dict[str, dict[str, dict[str, int]]],
 ) -> tuple[list[str], list[tuple[str, str]], list[tuple[str, int]], np.ndarray, np.ndarray]:
@@ -223,6 +250,10 @@ class DataModelTypesPlot(PlotPipeline):
             case "cdm20": 
                 print(f"\t[processing datasets] for {data_model}")
                 out_dict = _cdm20_types_and_subtypes_dict()
+                return out_dict
+            case "ecar":
+                print(f"\t[processing datasets] for {data_model}")
+                out_dict = _ecar_types_and_subtypes_dict()
                 return out_dict
             case _:
                 raise NotImplementedError
