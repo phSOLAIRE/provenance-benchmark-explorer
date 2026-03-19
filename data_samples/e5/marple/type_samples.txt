@@ -1,0 +1,322 @@
+{
+ 'com.bbn.tc.schema.avro.cdm20.Host': [{'com.bbn.tc.schema.avro.cdm20.Host': {'uuid': '00000000-0000-0000-0000-000000000000',
+                                                                              'hostName': 'TA1-MARPLE-1',
+                                                                              'ta1Version': '2019 '
+                                                                                            'Apr '
+                                                                                            '18 '
+                                                                                            '12:55:04, '
+                                                                                            'a4eb3f0860779dd3f3ea3d3df823a306a0af5c9c, '
+                                                                                            '#v_5.1.2 ',
+                                                                              'hostIdentifiers': None,
+                                                                              'osDetails': None,
+                                                                              'hostType': 'HOST_DESKTOP',
+                                                                              'interfaces': None}},
+                                       {'com.bbn.tc.schema.avro.cdm20.Host': {'uuid': '00000000-0000-0000-0000-000000000000',
+                                                                              'hostName': 'TA1-MARPLE-2',
+                                                                              'ta1Version': '2019 '
+                                                                                            'Apr '
+                                                                                            '18 '
+                                                                                            '12:55:04, '
+                                                                                            'a4eb3f0860779dd3f3ea3d3df823a306a0af5c9c, '
+                                                                                            '#v_5.1.2 ',
+                                                                              'hostIdentifiers': None,
+                                                                              'osDetails': None,
+                                                                              'hostType': 'HOST_DESKTOP',
+                                                                              'interfaces': None}},
+                                       {'com.bbn.tc.schema.avro.cdm20.Host': {'uuid': '00000000-0000-0000-0000-000000000000',
+                                                                              'hostName': 'TA1-MARPLE-3',
+                                                                              'ta1Version': '2019 '
+                                                                                            'Apr '
+                                                                                            '18 '
+                                                                                            '12:55:04, '
+                                                                                            'a4eb3f0860779dd3f3ea3d3df823a306a0af5c9c, '
+                                                                                            '#v_5.1.2 ',
+                                                                              'hostIdentifiers': None,
+                                                                              'osDetails': None,
+                                                                              'hostType': 'HOST_DESKTOP',
+                                                                              'interfaces': None}}],
+ 'com.bbn.tc.schema.avro.cdm20.Subject': [{'com.bbn.tc.schema.avro.cdm20.Subject': {'uuid': '01000000-0000-0000-0000-000000000000',
+                                                                                    'type': 'SUBJECT_PROCESS',
+                                                                                    'cid': 2296,
+                                                                                    'parentSubject': None,
+                                                                                    'localPrincipal': None,
+                                                                                    'startTimestampNanos': {'long': 1557234525144546600},
+                                                                                    'unitId': None,
+                                                                                    'iteration': None,
+                                                                                    'count': None,
+                                                                                    'cmdLine': {'string': 'eventType '
+                                                                                                          '# '
+                                                                                                          'Focus '
+                                                                                                          '@ '
+                                                                                                          'name '
+                                                                                                          '# '
+                                                                                                          'Administrator: '
+                                                                                                          'C:\\Windows\\System32\\cmd.exe '
+                                                                                                          '@ '
+                                                                                                          'value '
+                                                                                                          '#  '
+                                                                                                          '@ '
+                                                                                                          'controlType '
+                                                                                                          '# '
+                                                                                                          'UIA_WindowControlTypeId '
+                                                                                                          '@ '
+                                                                                                          'className '
+                                                                                                          '# '
+                                                                                                          'ConsoleWindowClass'},
+                                                                                    'privilegeLevel': None,
+                                                                                    'importedLibraries': None,
+                                                                                    'exportedLibraries': None,
+                                                                                    'properties': None}},
+                                          {'com.bbn.tc.schema.avro.cdm20.Subject': {'uuid': '02000000-0000-0000-0000-000000000000',
+                                                                                    'type': 'SUBJECT_THREAD',
+                                                                                    'cid': 0,
+                                                                                    'parentSubject': {'com.bbn.tc.schema.avro.cdm20.UUID': '01000000-0000-0000-0000-000000000000'},
+                                                                                    'localPrincipal': None,
+                                                                                    'startTimestampNanos': {'long': 1557234525144546600},
+                                                                                    'unitId': None,
+                                                                                    'iteration': None,
+                                                                                    'count': None,
+                                                                                    'cmdLine': {'string': 'eventType '
+                                                                                                          '# '
+                                                                                                          'Focus '
+                                                                                                          '@ '
+                                                                                                          'name '
+                                                                                                          '# '
+                                                                                                          'Administrator: '
+                                                                                                          'C:\\Windows\\System32\\cmd.exe '
+                                                                                                          '@ '
+                                                                                                          'value '
+                                                                                                          '#  '
+                                                                                                          '@ '
+                                                                                                          'controlType '
+                                                                                                          '# '
+                                                                                                          'UIA_WindowControlTypeId '
+                                                                                                          '@ '
+                                                                                                          'className '
+                                                                                                          '# '
+                                                                                                          'ConsoleWindowClass'},
+                                                                                    'privilegeLevel': None,
+                                                                                    'importedLibraries': None,
+                                                                                    'exportedLibraries': None,
+                                                                                    'properties': None}},
+                                          {'com.bbn.tc.schema.avro.cdm20.Subject': {'uuid': '04000000-0000-0000-0000-000000000000',
+                                                                                    'type': 'SUBJECT_PROCESS',
+                                                                                    'cid': 3640,
+                                                                                    'parentSubject': None,
+                                                                                    'localPrincipal': None,
+                                                                                    'startTimestampNanos': {'long': 1557234529496825800},
+                                                                                    'unitId': None,
+                                                                                    'iteration': None,
+                                                                                    'count': None,
+                                                                                    'cmdLine': {'string': 'eventType '
+                                                                                                          '# '
+                                                                                                          'Focus '
+                                                                                                          '@ '
+                                                                                                          'name '
+                                                                                                          '# '
+                                                                                                          'Administrator: '
+                                                                                                          'C:\\Windows\\System32\\cmd.exe '
+                                                                                                          '@ '
+                                                                                                          'value '
+                                                                                                          '#  '
+                                                                                                          '@ '
+                                                                                                          'controlType '
+                                                                                                          '# '
+                                                                                                          'UIA_WindowControlTypeId '
+                                                                                                          '@ '
+                                                                                                          'className '
+                                                                                                          '# '
+                                                                                                          'ConsoleWindowClass'},
+                                                                                    'privilegeLevel': None,
+                                                                                    'importedLibraries': None,
+                                                                                    'exportedLibraries': None,
+                                                                                    'properties': None}}],
+ 'com.bbn.tc.schema.avro.cdm20.Event': [{'com.bbn.tc.schema.avro.cdm20.Event': {'uuid': '03000000-0000-0000-0000-000000000000',
+                                                                                'sequence': None,
+                                                                                'type': 'EVENT_OTHER',
+                                                                                'threadId': {'int': 0},
+                                                                                'subject': {'com.bbn.tc.schema.avro.cdm20.UUID': '01000000-0000-0000-0000-000000000000'},
+                                                                                'predicateObject': {'com.bbn.tc.schema.avro.cdm20.UUID': '01000000-0000-0000-0000-000000000000'},
+                                                                                'predicateObjectPath': None,
+                                                                                'predicateObject2': None,
+                                                                                'predicateObject2Path': None,
+                                                                                'timestampNanos': 1557234525144546600,
+                                                                                'names': {'array': ['eventType '
+                                                                                                    '# '
+                                                                                                    'Focus '
+                                                                                                    '@ '
+                                                                                                    'name '
+                                                                                                    '# '
+                                                                                                    'Administrator: '
+                                                                                                    'C:\\Windows\\System32\\cmd.exe '
+                                                                                                    '@ '
+                                                                                                    'value '
+                                                                                                    '#  '
+                                                                                                    '@ '
+                                                                                                    'controlType '
+                                                                                                    '# '
+                                                                                                    'UIA_WindowControlTypeId '
+                                                                                                    '@ '
+                                                                                                    'className '
+                                                                                                    '# '
+                                                                                                    'ConsoleWindowClass']},
+                                                                                'parameters': None,
+                                                                                'location': None,
+                                                                                'size': None,
+                                                                                'programPoint': None,
+                                                                                'properties': None}},
+                                        {'com.bbn.tc.schema.avro.cdm20.Event': {'uuid': '05000000-0000-0000-0000-000000000000',
+                                                                                'sequence': None,
+                                                                                'type': 'EVENT_OTHER',
+                                                                                'threadId': {'int': 0},
+                                                                                'subject': {'com.bbn.tc.schema.avro.cdm20.UUID': '04000000-0000-0000-0000-000000000000'},
+                                                                                'predicateObject': {'com.bbn.tc.schema.avro.cdm20.UUID': '04000000-0000-0000-0000-000000000000'},
+                                                                                'predicateObjectPath': None,
+                                                                                'predicateObject2': None,
+                                                                                'predicateObject2Path': None,
+                                                                                'timestampNanos': 1557234529496825800,
+                                                                                'names': {'array': ['eventType '
+                                                                                                    '# '
+                                                                                                    'Focus '
+                                                                                                    '@ '
+                                                                                                    'name '
+                                                                                                    '# '
+                                                                                                    'Administrator: '
+                                                                                                    'C:\\Windows\\System32\\cmd.exe '
+                                                                                                    '@ '
+                                                                                                    'value '
+                                                                                                    '#  '
+                                                                                                    '@ '
+                                                                                                    'controlType '
+                                                                                                    '# '
+                                                                                                    'UIA_WindowControlTypeId '
+                                                                                                    '@ '
+                                                                                                    'className '
+                                                                                                    '# '
+                                                                                                    'ConsoleWindowClass']},
+                                                                                'parameters': None,
+                                                                                'location': None,
+                                                                                'size': None,
+                                                                                'programPoint': None,
+                                                                                'properties': None}},
+                                        {'com.bbn.tc.schema.avro.cdm20.Event': {'uuid': '03000000-0000-0000-0000-000000000000',
+                                                                                'sequence': None,
+                                                                                'type': 'EVENT_OTHER',
+                                                                                'threadId': {'int': 0},
+                                                                                'subject': {'com.bbn.tc.schema.avro.cdm20.UUID': '01000000-0000-0000-0000-000000000000'},
+                                                                                'predicateObject': {'com.bbn.tc.schema.avro.cdm20.UUID': '01000000-0000-0000-0000-000000000000'},
+                                                                                'predicateObjectPath': None,
+                                                                                'predicateObject2': None,
+                                                                                'predicateObject2Path': None,
+                                                                                'timestampNanos': 1557235321997646900,
+                                                                                'names': {'array': ['eventType '
+                                                                                                    '# '
+                                                                                                    'Focus '
+                                                                                                    '@ '
+                                                                                                    'name '
+                                                                                                    '# '
+                                                                                                    'Administrator: '
+                                                                                                    'C:\\Windows\\System32\\cmd.exe '
+                                                                                                    '@ '
+                                                                                                    'value '
+                                                                                                    '#  '
+                                                                                                    '@ '
+                                                                                                    'controlType '
+                                                                                                    '# '
+                                                                                                    'UIA_WindowControlTypeId '
+                                                                                                    '@ '
+                                                                                                    'className '
+                                                                                                    '# '
+                                                                                                    'ConsoleWindowClass']},
+                                                                                'parameters': None,
+                                                                                'location': None,
+                                                                                'size': None,
+                                                                                'programPoint': None,
+                                                                                'properties': None}}],
+ 'com.bbn.tc.schema.avro.cdm20.Principal': [{'com.bbn.tc.schema.avro.cdm20.Principal': {'uuid': '0A000000-0000-0000-0000-000000000000',
+                                                                                        'type': 'PRINCIPAL_LOCAL',
+                                                                                        'userId': 'SID:S-1-5-18&0',
+                                                                                        'username': {'string': ''},
+                                                                                        'groupIds': None,
+                                                                                        'properties': None}},
+                                            {'com.bbn.tc.schema.avro.cdm20.Principal': {'uuid': '01000000-0000-0000-0000-000000000000',
+                                                                                        'type': 'PRINCIPAL_LOCAL',
+                                                                                        'userId': 'SID:S-1-5-18&0',
+                                                                                        'username': {'string': ''},
+                                                                                        'groupIds': None,
+                                                                                        'properties': None}},
+                                            {'com.bbn.tc.schema.avro.cdm20.Principal': {'uuid': '77080000-0000-0000-0000-000000000000',
+                                                                                        'type': 'PRINCIPAL_LOCAL',
+                                                                                        'userId': 'SID:S-1-5-20&0',
+                                                                                        'username': {'string': ''},
+                                                                                        'groupIds': None,
+                                                                                        'properties': None}}],
+ 'com.bbn.tc.schema.avro.cdm20.UnitDependency': [{'com.bbn.tc.schema.avro.cdm20.UnitDependency': {'unit': '0C000000-0000-0000-0000-000000000000',
+                                                                                                  'dependentUnit': '0B000000-0000-0000-0000-000000000000'}},
+                                                 {'com.bbn.tc.schema.avro.cdm20.UnitDependency': {'unit': '03000000-0000-0000-0000-000000000000',
+                                                                                                  'dependentUnit': '02000000-0000-0000-0000-000000000000'}},
+                                                 {'com.bbn.tc.schema.avro.cdm20.UnitDependency': {'unit': '20220000-0000-0000-0000-000000000000',
+                                                                                                  'dependentUnit': '0D270000-0000-0000-0000-000000000000'}}],
+ 'com.bbn.tc.schema.avro.cdm20.FileObject': [{'com.bbn.tc.schema.avro.cdm20.FileObject': {'uuid': '09020000-0000-0000-0000-000000000000',
+                                                                                          'baseObject': {'permission': None,
+                                                                                                         'epoch': None,
+                                                                                                         'properties': None},
+                                                                                          'type': 'FILE_OBJECT_PEFILE',
+                                                                                          'fileDescriptor': None,
+                                                                                          'localPrincipal': None,
+                                                                                          'size': None,
+                                                                                          'peInfo': None,
+                                                                                          'hashes': None}},
+                                             {'com.bbn.tc.schema.avro.cdm20.FileObject': {'uuid': '0B020000-0000-0000-0000-000000000000',
+                                                                                          'baseObject': {'permission': None,
+                                                                                                         'epoch': None,
+                                                                                                         'properties': None},
+                                                                                          'type': 'FILE_OBJECT_PEFILE',
+                                                                                          'fileDescriptor': None,
+                                                                                          'localPrincipal': None,
+                                                                                          'size': None,
+                                                                                          'peInfo': None,
+                                                                                          'hashes': None}},
+                                             {'com.bbn.tc.schema.avro.cdm20.FileObject': {'uuid': '0D020000-0000-0000-0000-000000000000',
+                                                                                          'baseObject': {'permission': None,
+                                                                                                         'epoch': None,
+                                                                                                         'properties': None},
+                                                                                          'type': 'FILE_OBJECT_PEFILE',
+                                                                                          'fileDescriptor': None,
+                                                                                          'localPrincipal': None,
+                                                                                          'size': None,
+                                                                                          'peInfo': None,
+                                                                                          'hashes': None}}],
+ 'com.bbn.tc.schema.avro.cdm20.NetFlowObject': [{'com.bbn.tc.schema.avro.cdm20.NetFlowObject': {'uuid': '5D320000-0000-0000-0000-000000000000',
+                                                                                                'baseObject': {'permission': None,
+                                                                                                               'epoch': None,
+                                                                                                               'properties': None},
+                                                                                                'localAddress': {'string': '128.55.12.55'},
+                                                                                                'localPort': {'int': 64715},
+                                                                                                'remoteAddress': {'string': '224.0.0.252'},
+                                                                                                'remotePort': {'int': 5355},
+                                                                                                'ipProtocol': {'int': 17},
+                                                                                                'initTcpSeqNum': None,
+                                                                                                'fileDescriptor': None}},
+                                                {'com.bbn.tc.schema.avro.cdm20.NetFlowObject': {'uuid': '03330000-0000-0000-0000-000000000000',
+                                                                                                'baseObject': {'permission': None,
+                                                                                                               'epoch': None,
+                                                                                                               'properties': None},
+                                                                                                'localAddress': {'string': '128.55.12.76'},
+                                                                                                'localPort': {'int': 137},
+                                                                                                'remoteAddress': {'string': '128.55.12.255'},
+                                                                                                'remotePort': {'int': 137},
+                                                                                                'ipProtocol': {'int': 17},
+                                                                                                'initTcpSeqNum': None,
+                                                                                                'fileDescriptor': None}},
+                                                {'com.bbn.tc.schema.avro.cdm20.NetFlowObject': {'uuid': '51156B04-0000-0000-0000-000000000000',
+                                                                                                'baseObject': {'permission': None,
+                                                                                                               'epoch': None,
+                                                                                                               'properties': None},
+                                                                                                'localAddress': {'string': '128.55.12.124'},
+                                                                                                'localPort': {'int': 137},
+                                                                                                'remoteAddress': {'string': '10.0.6.9'},
+                                                                                                'remotePort': {'int': 137},
+                                                                                                'ipProtocol': {'int': 17},
+                                                                                                'initTcpSeqNum': None,
+                                                                                                'fileDescriptor': None}}]}
