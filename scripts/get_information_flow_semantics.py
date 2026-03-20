@@ -15,9 +15,12 @@ from provenance_explorer.raw_file_handling.parsing_helpers import PARSERS, TS_EX
 
 INFORMATION_FLOW_EVENTS = [
     "EVENT_CLONE",
+    "EVENT_CREATE_THREAD",
     "EVENT_EXECUTE",
     "EVENT_FLOWS_TO",
     "EVENT_FORK",
+    "EVENT_LOADLIBRARY",
+    "EVENT_LSEEK",
     "EVENT_MMAP",
     "EVENT_READ",
     "EVENT_RECVFROM",

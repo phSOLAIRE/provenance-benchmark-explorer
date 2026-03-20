@@ -6,6 +6,9 @@
          2x  Subject(SUBJECT_PROCESS)  --EVENT_FLOWS_TO-->  FileObject(FILE_OBJECT_FILE)  |  FileObject(FILE_OBJECT_FILE)
        146x  Subject(SUBJECT_PROCESS)  --EVENT_FORK-->  Subject(SUBJECT_PROCESS)  |  None
         28x  Unresolved(Unresolved)  --EVENT_FORK-->  Subject(SUBJECT_PROCESS)  |  None
+      1998x  Subject(SUBJECT_PROCESS)  --EVENT_LSEEK-->  FileObject(FILE_OBJECT_FILE)  |  None
+        64x  Subject(SUBJECT_PROCESS)  --EVENT_LSEEK-->  Unresolved(Unresolved)  |  None
+         8x  Unresolved(Unresolved)  --EVENT_LSEEK-->  FileObject(FILE_OBJECT_FILE)  |  None
       3068x  Subject(SUBJECT_PROCESS)  --EVENT_MMAP-->  FileObject(FILE_OBJECT_FILE)  |  None
        356x  Subject(SUBJECT_PROCESS)  --EVENT_MMAP-->  Unresolved(Unresolved)  |  None
         80x  Unresolved(Unresolved)  --EVENT_MMAP-->  FileObject(FILE_OBJECT_FILE)  |  None
@@ -43,6 +46,9 @@
   clearscope
 ================================================================================
        310x  Subject(SUBJECT_PROCESS)  --EVENT_CLONE-->  None  |  None
+        28x  Subject(SUBJECT_PROCESS)  --EVENT_LOADLIBRARY-->  FileObject(FILE_OBJECT_FILE)  |  None
+         5x  Unresolved(Unresolved)  --EVENT_LOADLIBRARY-->  FileObject(FILE_OBJECT_FILE)  |  None
+        14x  Unresolved(Unresolved)  --EVENT_LSEEK-->  FileObject(FILE_OBJECT_FILE)  |  None
         60x  Subject(SUBJECT_PROCESS)  --EVENT_MMAP-->  None  |  None
          1x  Subject(SUBJECT_PROCESS)  --EVENT_MMAP-->  FileObject(FILE_OBJECT_FILE)  |  None
         20x  Unresolved(Unresolved)  --EVENT_MMAP-->  FileObject(FILE_OBJECT_FILE)  |  None
@@ -148,9 +154,12 @@
 ================================================================================
   fivedirections
 ================================================================================
+      1408x  Subject(SUBJECT_THREAD)  --EVENT_CREATE_THREAD-->  Subject(SUBJECT_THREAD)  |  None
+      1689x  Unresolved(Unresolved)  --EVENT_CREATE_THREAD-->  Subject(SUBJECT_THREAD)  |  None
         69x  Subject(SUBJECT_PROCESS)  --EVENT_EXECUTE-->  Unresolved(Unresolved)  |  None
         29x  Subject(SUBJECT_THREAD)  --EVENT_FORK-->  Subject(SUBJECT_PROCESS)  |  None
         40x  Unresolved(Unresolved)  --EVENT_FORK-->  Subject(SUBJECT_PROCESS)  |  None
+      4966x  Subject(SUBJECT_THREAD)  --EVENT_LOADLIBRARY-->  Unresolved(Unresolved)  |  None
        260x  Subject(SUBJECT_PROCESS)  --EVENT_READ-->  FileObject(FILE_OBJECT_FILE)  |  None
       1572x  Subject(SUBJECT_PROCESS)  --EVENT_READ-->  RegistryKeyObject  |  None
          1x  Subject(SUBJECT_THREAD)  --EVENT_READ-->  FileObject(FILE_OBJECT_FILE)  |  None
@@ -220,6 +229,8 @@
       1902x  Subject(SUBJECT_PROCESS)  --EVENT_EXECUTE-->  Subject(SUBJECT_PROCESS)  |  None
       1998x  Subject(SUBJECT_PROCESS)  --EVENT_FORK-->  Subject(SUBJECT_PROCESS)  |  None
         95x  Unresolved(Unresolved)  --EVENT_FORK-->  Subject(SUBJECT_PROCESS)  |  None
+         2x  Subject(SUBJECT_PROCESS)  --EVENT_LOADLIBRARY-->  FileObject(FILE_OBJECT_FILE)  |  None
+      4159x  Subject(SUBJECT_PROCESS)  --EVENT_LOADLIBRARY-->  Unresolved(Unresolved)  |  None
       1377x  Subject(SUBJECT_PROCESS)  --EVENT_MMAP-->  FileObject(FILE_OBJECT_FILE)  |  MemoryObject
      28887x  Subject(SUBJECT_PROCESS)  --EVENT_MMAP-->  MemoryObject  |  None
       7855x  Subject(SUBJECT_UNIT)  --EVENT_MMAP-->  MemoryObject  |  None
