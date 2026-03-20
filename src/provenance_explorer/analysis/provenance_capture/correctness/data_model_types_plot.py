@@ -76,9 +76,14 @@ def _process_one_subdataset_cdm20(
                 subtype = record[record_type]["hostType"]
                 counts[record_type_short][subtype] += 1
 
+            case record_type_short if record_type_short in ["PacketSocketObject"]: 
+                subtype = str(record[record_type]["haType"]) # ARP hardware type 
+                counts[record_type_short][subtype] += 1
+
             case record_type_short if record_type_short in [
                 "NetFlowObject", "UnnamedPipeObject", "ProvenanceTagNode", "UnitDependency",
                 "StartMarker", "TimeMarker", "EndMarker", "MemoryObject", "RegistryKeyObject",
+                "UnknownProvenanceNode", 
             ]:
                 counts[record_type_short][record_type_short] += 1
 
