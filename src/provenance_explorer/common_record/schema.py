@@ -1,9 +1,8 @@
 """
 Common record schema for cross-dataset provenance graph construction.
 
-Defines the normalized intermediate representation that all dataset-specific
-parsers produce. Every CommonRecord maps to exactly one edge in the target
-provenance graph model (KRYSTAL-like OS-agnostic schema).
+Defines the normalized intermediate representation that all dataset-specific parsers produce. 
+Every CommonRecord maps to exactly one edge in the target provenance graph model (KRYSTAL-like OS-agnostic schema).
 """
 
 from __future__ import annotations
@@ -13,10 +12,7 @@ from enum import Enum, auto
 from typing import Optional
 
 
-
 # Edge categories - these map 1:1 to the target graph edges
-
-
 class EdgeCategory(Enum):
     """
     The six provenance-relevant edge types, derived from the target graph model.
@@ -32,11 +28,7 @@ class EdgeCategory(Enum):
     SEND = auto()       # (Process) -[sends]-> (Socket)
     RECV = auto()       # (Socket) -[isReceivedBy]-> (Process)
 
-
-
 # Object roles - what role the object plays in the common graph model
-
-
 class ObjectRole(Enum):
     """Resolved role of the event's target object in the provenance graph."""
 
@@ -46,10 +38,7 @@ class ObjectRole(Enum):
     EXECUTABLE = auto() # Executable (target of EXECUTE/LOADLIBRARY - also a file, but tagged for hasExe edge)
 
 
-
 # Drop reasons - why a record was excluded from the common representation
-
-
 class DropReason(Enum):
     """
     Enumerated reasons for excluding a record. Each dropped record increments
@@ -69,10 +58,7 @@ class DropReason(Enum):
     PARSE_ERROR = auto()             # json.loads or field extraction failed
 
 
-
 # Common record - the normalized intermediate representation
-
-
 @dataclass(slots=True, frozen=True)
 class CommonRecord:
     """
@@ -91,6 +77,7 @@ class CommonRecord:
     # classification
     edge_category: EdgeCategory         # Which graph edge this becomes
     object_role: ObjectRole             # What the target object represents
+    edge_uuid: str                      # edge uuid
 
     # entity identifiers
     subject_uuid: str                   # Process uuid (after thread/unit collapse)
@@ -114,8 +101,3 @@ class CommonRecord:
     raw_event_type: str = ""            # Original event type string before normalization
     raw_object_type: str = ""           # Original object type string before normalization
     raw_subject_type: str = ""          # Original subject type (SUBJECT_PROCESS, SUBJECT_UNIT, ...)
-
-
-# Note: ObjectInfo has been replaced by CompactInfo (NamedTuple) in
-# object_lookup.py for memory efficiency. See that module for the
-# per-uuid metadata structure used during pass 1 collection and lookup.

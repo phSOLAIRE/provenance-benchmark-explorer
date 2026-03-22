@@ -92,8 +92,6 @@ class CompactInfo(NamedTuple):
 
 
 # uuid conversion helpers
-
-
 def uuid_to_bytes(uuid_str: str) -> bytes:
     """Convert a uuid string (with or without dashes) to 16 bytes."""
     return bytes.fromhex(uuid_str.replace("-", ""))
@@ -107,8 +105,6 @@ def bytes_to_uuid(b: bytes) -> str:
 
 
 # Type filtering: which record types to KEEP in the lookup
-
-
 CDM_KEEP_RECORD_TYPES = {"Subject", "FileObject", "NetFlowObject", "RegistryKeyObject", "Host", "Principal"}
 
 CDM_SKIP_RECORD_TYPES = {
@@ -123,8 +119,6 @@ OPTC_SKIP_OBJECT_TYPES = {"THREAD", "SHELL", "HOST", "TASK", "USER_SESSION", "SE
 
 
 # Type -> role resolution
-
-
 CDM_TYPE_TO_ROLE: dict[str, int] = {
     "FileObject(FILE_OBJECT_FILE)": ObjectRoleCompact.FILE,
     "FileObject(FILE_OBJECT_BLOCK)": ObjectRoleCompact.FILE,
@@ -202,7 +196,6 @@ class _CollectionEntry:
         self.parent_uuid_str: Optional[str] = None
         self.pid: Optional[int] = None
         self.principal_uuid_str: Optional[str] = None
-
 
 
 # ObjectLookup - the main class

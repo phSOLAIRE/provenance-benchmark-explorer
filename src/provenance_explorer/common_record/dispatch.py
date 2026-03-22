@@ -93,6 +93,14 @@ def dispatch_cdm_event(
         drop_log.record_drop(dataset, sub_dataset, DropReason.ABSTRACT_FLOW,
                              raw_event_type=raw_event_type)
         return None
+    
+    # Event uuid
+    event_ref = record_value.get("uuid")
+    event_str = _unwrap_uuid(event_ref)
+    if not event_str:
+        drop_log.record_drop(dataset, sub_dataset, DropReason.PARSE_ERROR,
+                             raw_event_type=raw_event_type)
+        return None
 
     # Subject uuid
     subject_ref = record_value.get("subject")
@@ -183,6 +191,7 @@ def dispatch_cdm_event(
         timestamp_ns=timestamp_ns,
         edge_category=edge_category,
         object_role=final_role,
+        edge_uuid=event_str,
         subject_uuid=bytes_to_uuid(resolved_subj_bytes),
         object_uuid=bytes_to_uuid(object_bytes),
         dataset=dataset,
@@ -213,10 +222,17 @@ def dispatch_optc_event(
     """Classify one OpTC record. Returns CommonRecord or None."""
     action = rec.get("action", "")
     obj_type = rec.get("object", "")
+    event_str = (rec.get("uuid") or "").upper()
     actor_str = (rec.get("actorID") or "").upper()
     object_str = (rec.get("objectID") or "").upper()
     props = rec.get("properties", {}) or {}
     raw_event_type = f"{obj_type}+{action}"
+
+    if not event_str:
+        drop_log.record_drop(
+            dataset, sub_dataset, DropReason.PARSE_ERROR,raw_event_type=raw_event_type
+        )
+        return None
 
     if not actor_str:
         drop_log.record_drop(
@@ -265,6 +281,7 @@ def dispatch_optc_event(
         timestamp_ns=timestamp_ns,
         edge_category=edge_category,
         object_role=final_role,
+        edge_uuid=event_str,
         subject_uuid=actor_str,
         object_uuid=object_str,
         dataset=dataset,
