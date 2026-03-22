@@ -2,6 +2,7 @@ dummy**
 token.json
 client_secret.json
 slurm-out/
+submit_*.sh
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
