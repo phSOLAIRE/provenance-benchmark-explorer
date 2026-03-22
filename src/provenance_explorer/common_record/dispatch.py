@@ -222,7 +222,7 @@ def dispatch_optc_event(
     """Classify one OpTC record. Returns CommonRecord or None."""
     action = rec.get("action", "")
     obj_type = rec.get("object", "")
-    event_str = (rec.get("uuid") or "").upper()
+    event_str = (rec.get("id") or "").upper()
     actor_str = (rec.get("actorID") or "").upper()
     object_str = (rec.get("objectID") or "").upper()
     props = rec.get("properties", {}) or {}
