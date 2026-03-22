@@ -2,10 +2,10 @@
 #SBATCH -p standard96s
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=16G
-#SBATCH --time=48:00:00
+#SBATCH --time=24:00:00
 #SBATCH --mail-user=j.rieling@stud.uni-goettingen.de
 #SBATCH --mail-type=all
-#SBATCH --output=slurm-out/cdm20_plot_%j.out
+#SBATCH --output=slurm-out/sample_script_%j.out
 
 date
 hostname
@@ -24,8 +24,8 @@ python -c "
 from provenance_explorer.analysis.provenance_capture.correctness.data_model_types_plot import DataModelTypesPlot
 
 plot = DataModelTypesPlot()
-plot.invalidate(data_model='cdm20')
-plot.run(data_model='cdm20')
+plot.invalidate(data_model='ecar')
+plot.run(data_model='ecar')
 print('Done - cache written.')
 "
 
