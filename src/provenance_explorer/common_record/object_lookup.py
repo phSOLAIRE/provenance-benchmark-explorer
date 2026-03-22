@@ -445,9 +445,13 @@ class ObjectLookup:
 
             self._dict[uuid_b] = CompactInfo(
                 role=role, ambiguous=ambiguous,
-                path=entry.path, ip=entry.ip, port=entry.port,
-                cmdline=entry.cmdline, parent_uuid=parent_b,
-                pid=entry.pid, principal_uuid=principal_b,
+                path=_extract_string(entry.path) if not isinstance(entry.path, (str, type(None))) else entry.path,
+                ip=_extract_string(entry.ip) if not isinstance(entry.ip, (str, type(None))) else entry.ip,
+                port=_extract_int(entry.port) if not isinstance(entry.port, (int, type(None))) else entry.port,
+                cmdline=_extract_string(entry.cmdline) if not isinstance(entry.cmdline, (str, type(None))) else entry.cmdline,
+                parent_uuid=parent_b,
+                pid=_extract_int(entry.pid) if not isinstance(entry.pid, (int, type(None))) else entry.pid,
+                principal_uuid=principal_b,
                 types_raw=types_raw,
             )
 
@@ -497,8 +501,12 @@ class ObjectLookup:
 
             batch.append((
                 uuid_b, role, int(ambiguous),
-                entry.path, entry.ip, entry.port,
-                entry.cmdline, parent_b, entry.pid,
+                _extract_string(entry.path) if not isinstance(entry.path, (str, type(None))) else entry.path,
+                _extract_string(entry.ip) if not isinstance(entry.ip, (str, type(None))) else entry.ip,
+                _extract_int(entry.port) if not isinstance(entry.port, (int, type(None))) else entry.port,
+                _extract_string(entry.cmdline) if not isinstance(entry.cmdline, (str, type(None))) else entry.cmdline,
+                parent_b,
+                _extract_int(entry.pid) if not isinstance(entry.pid, (int, type(None))) else entry.pid,
                 principal_b, types_raw
             ))
             stored += 1
@@ -948,10 +956,10 @@ def _flush_buf_to_staging(buf: dict[str, _CollectionEntry], conn: sqlite3.Connec
         batch.append((
             uuid_str,
             types_csv,
-            entry.path,
-            entry.ip,
+            entry.path if isinstance(entry.path, (str, type(None))) else _extract_string(entry.path),
+            entry.ip if isinstance(entry.ip, (str, type(None))) else _extract_string(entry.ip),
             entry.port,
-            entry.cmdline,
+            entry.cmdline if isinstance(entry.cmdline, (str, type(None))) else _extract_string(entry.cmdline),
             entry.parent_uuid_str,
             entry.pid,
             entry.principal_uuid_str,
@@ -991,8 +999,22 @@ def _extract_int(val: Any) -> Optional[int]:
     if isinstance(val, int):
         return val
     if isinstance(val, dict):
-        v = val.get("int") or val.get("long") or next(iter(val.values()), None)
-        return int(v) if v is not None else None
+        # Check each key explicitly - dont use or which treats 0 as falsy
+        for key in ("int", "long"):
+            v = val.get(key)
+            if v is not None:
+                try:
+                    return int(v)
+                except (ValueError, TypeError):
+                    pass
+        # Fallback: try first value in the dict
+        v = next(iter(val.values()), None)
+        if v is not None:
+            try:
+                return int(v)
+            except (ValueError, TypeError):
+                pass
+        return None
     try:
         return int(val)
     except (ValueError, TypeError):
