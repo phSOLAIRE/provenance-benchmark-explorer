@@ -10,7 +10,6 @@ Strategy:
     this will be marked as unresolved in iterations. these are based decisions to limit scope 
     and other configurations are arguably also defensible
 
-
 2. Representation: 
     uuids stored as 16-byte binary (bytes.fromhex) & ObjectInfo with NamedTuple encoding.
 
@@ -37,14 +36,12 @@ from typing import Any, Optional, NamedTuple
 
 logger = logging.getLogger(__name__)
 
-
-
 # CONFIGS
 # If filtered entry count exceeds this, use SQLite instead of in-memory dict.
 MEMORY_THRESHOLD = 20_000_000
 
 # LRU cache size for SQLite mode (number of entries to keep in memory)
-LRU_CACHE_SIZE = 2_000_000
+LRU_CACHE_SIZE = 20_000_000
 
 # Compact types
 class ObjectRoleCompact:
@@ -103,7 +100,6 @@ def bytes_to_uuid(b: bytes) -> str:
     return f"{h[:8]}-{h[8:12]}-{h[12:16]}-{h[16:20]}-{h[20:]}"
 
 
-
 # Type filtering: which record types to KEEP in the lookup
 CDM_KEEP_RECORD_TYPES = {"Subject", "FileObject", "NetFlowObject", "RegistryKeyObject", "Host", "Principal"}
 
@@ -115,7 +111,6 @@ CDM_SKIP_RECORD_TYPES = {
 
 OPTC_KEEP_OBJECT_TYPES = {"FILE", "MODULE", "FLOW", "PROCESS", "REGISTRY"}
 OPTC_SKIP_OBJECT_TYPES = {"THREAD", "SHELL", "HOST", "TASK", "USER_SESSION", "SERVICE"}
-
 
 
 # Type -> role resolution
