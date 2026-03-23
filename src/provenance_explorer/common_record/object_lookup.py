@@ -34,6 +34,8 @@ from collections import OrderedDict
 from pathlib import Path
 from typing import Any, Optional, NamedTuple
 
+from provenance_explorer.registry.registry_all import WORK
+
 logger = logging.getLogger(__name__)
 
 # CONFIGS
@@ -666,7 +668,7 @@ class ObjectLookup:
         return p
 
     @classmethod
-    def load(cls, dataset: str, sub_dataset: str, cache_root: Path) -> Optional["ObjectLookup"]:
+    def load(cls, dataset: str, sub_dataset: str, cache_root: Path = WORK / "provenance-explorer-cache") -> Optional["ObjectLookup"]:
         """Load from cache (SQLite or pickle). Returns None if not cached."""
         obj = cls(dataset, sub_dataset)
 
