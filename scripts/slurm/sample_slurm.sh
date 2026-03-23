@@ -3,7 +3,7 @@
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=16G
 #SBATCH --time=24:00:00
-#SBATCH --mail-user=j.rieling@stud.uni-goettingen.de
+#SBATCH --mail-user=email@example.de
 #SBATCH --mail-type=all
 #SBATCH --output=slurm-out/sample_script_%j.out
 
@@ -11,7 +11,7 @@ date
 hostname
 pwd
 
-source /user/j.rieling/u12762/.bashrc
+source /user/your_account/your_user/.bashrc 
 
 conda activate provenance-explorer
 cd $SLURM_SUBMIT_DIR
