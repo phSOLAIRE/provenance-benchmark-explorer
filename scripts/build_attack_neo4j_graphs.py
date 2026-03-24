@@ -50,7 +50,7 @@ E3_SLICES = [
         "All THEIA attacks."
     ),
     AttackSlice(
-        "e3", "trace", "2018-04-10 00:06:00", "2018-04-14 00:18:00",
+        "e3", "trace", "2018-04-10 06:00:00", "2018-04-10 18:00:00",
         "Firefox-> in memory Drakon -> Elevation -> Persistence -> Crednetials"
     ),
     AttackSlice(
@@ -97,7 +97,6 @@ E5_SLICES = [
         "e5", "clearscope","2019-05-13 00:00:00", "2019-05-18 00:00:00",
         "E5 ClearScope: Metasploit APK, Micro APT, Lockwatch, Tester"
     ),
-
     AttackSlice(
         "e5", "fivedirections","2019-05-09 07:00:00", "2019-05-09 19:00:00",
         "E5 FiveDirections: Firefox Drakon"
