@@ -7,5 +7,6 @@ Basic use:
 
 from .graph_builder import GraphBuilder
 from .instance_manager import Neo4jInstanceManager
-
-__all__ = ["GraphBuilder", "Neo4jInstanceManager"]
+from .annotator import GraphAnnotator
+ 
+__all__ = ["GraphBuilder", "Neo4jInstanceManager", "GraphAnnotator"]
