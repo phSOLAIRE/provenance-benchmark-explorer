@@ -247,18 +247,18 @@ class GraphAnnotator:
                 self._edge_matches[f"{source}/{abs_path.name}"] = matched
 
     def clear_annotations(self) -> None:
-        """Remove all malicious/attack_* properties from nodes and edges.""" # TODO make this use indexes
+        """Remove all malicious/attack_* properties from nodes and edges."""
         with self._driver.session(database=self._database) as session:
             session.run("""
-                MATCH (n)
+                MATCH (n:File|Executable|Socket|Host|User|Process)
                 WHERE n.malicious IS NOT NULL
                 REMOVE n.malicious, n.attack_sources
             """).consume()
 
             session.run("""
-                MATCH ()-[r]->()
+                MATCH ()-[r:writes|isReadBy|sends|isReceivedBy|forks|isExecutedBy {edge_uuid: row.edge_uuid}]->()
                 WHERE r.malicious IS NOT NULL
-                REMOVE r.malicious, r.attack_sources
+                REMOVE r.malicious
             """).consume()
 
         logger.info("Cleared all attack annotations.")
@@ -296,7 +296,7 @@ class GraphAnnotator:
         """
         query = """
             UNWIND $rows AS row
-            MATCH (n {uuid: row.uuid})
+            MATCH (n:File|Executable|Socket|Host|User|Process {uuid: row.uuid})
             SET n.malicious = true,
                 n.attack_sources = CASE
                     WHEN n.attack_sources IS NULL THEN [row.source]
@@ -330,17 +330,11 @@ class GraphAnnotator:
         Mark edges with matching edge_uuid as malicious.
         Must scan across all relationship types.
         """
-        # TODO use indexes on edge_uuid per rel type
+        # uses indexes on edge_uuid per rel type
         query = """
-            UNWIND $rows AS row
-            MATCH ()-[r {edge_uuid: row.edge_uuid}]->()
-            SET r.malicious = true,
-                r.attack_sources = CASE
-                    WHEN r.attack_sources IS NULL THEN [row.source]
-                    WHEN NOT row.source IN r.attack_sources
-                        THEN r.attack_sources + row.source
-                    ELSE r.attack_sources
-                END
+        UNWIND $rows AS row
+            MATCH ()-[r:writes|isReadBy|sends|isReceivedBy|forks|isExecutedBy {edge_uuid: row.edge_uuid}]->()
+            SET r.malicious = true
         """
 
         rows = [{"edge_uuid": eu, "source": source} for eu in edge_uuids]
@@ -351,7 +345,7 @@ class GraphAnnotator:
 
         with self._driver.session(database=self._database) as session:
             result = session.run(
-                "MATCH ()-[r {malicious: true}]->() WHERE r.edge_uuid IN $euuids RETURN count(r) AS c",
+                "MATCH ()-[r:writes|isReadBy|sends|isReceivedBy|forks|isExecutedBy {malicious: true}]->() WHERE r.edge_uuid IN $euuids RETURN count(r) AS c",
                 euuids=list(edge_uuids),
             )
             matched = result.single()["c"] # type: ignore
