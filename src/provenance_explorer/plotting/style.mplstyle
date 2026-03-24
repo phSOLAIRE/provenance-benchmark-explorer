@@ -1,5 +1,4 @@
 # --- Figure ---
-figure.figsize:      7, 4.5
 figure.dpi:          150
 figure.facecolor:    white
 savefig.dpi:         300
@@ -12,6 +11,9 @@ font.family:         serif
 font.size:           10
 text.usetex:         false
 mathtext.fontset:    cm
+
+# -- colors--
+axes.prop_cycle: cycler('color', ['4a2377', '8cc5e3', 'f55f74', '0d7d87', 'a07bc0', 'c8e8f4', 'f9a8b2', '5bb8c0'])
 
 # --- Axes ---
 axes.titlesize:      12
