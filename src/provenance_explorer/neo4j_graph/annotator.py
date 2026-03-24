@@ -178,7 +178,7 @@ def load_label_file(source: str, path: Path) -> Tuple[Set[str], Set[str]]:
         return set(), set()
 
 
-_CHUNK = 5_000 # size for UNWIND 
+_CHUNK = 50_000 # size for UNWIND 
 
 def _chunks(xs: list, size: int):
     for i in range(0, len(xs), size):
