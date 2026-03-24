@@ -203,7 +203,6 @@ class GraphAnnotator:
         self._database = database
 
         self._node_matches: Dict[str, int] = defaultdict(int)
-        self._edge_matches: Dict[str, int] = defaultdict(int)
 
     # Public API
     def annotate_from_registry(
@@ -243,8 +242,7 @@ class GraphAnnotator:
                 self._node_matches[f"{source}/{abs_path.name}"] = matched
 
             if edge_uuids:
-                matched = self._annotate_edges(edge_uuids, source)
-                self._edge_matches[f"{source}/{abs_path.name}"] = matched
+                self._annotate_edges(edge_uuids, source)
 
     def clear_annotations(self) -> None:
         """Remove all malicious/attack_* properties from nodes and edges."""
@@ -273,13 +271,6 @@ class GraphAnnotator:
             lines.append(f"  {key}: {count} nodes matched")
             total_nodes += count
         lines.append(f"  Total: {total_nodes}")
-
-        lines.append("Edge annotations:")
-        total_edges = 0
-        for key, count in sorted(self._edge_matches.items()):
-            lines.append(f"  {key}: {count} edges matched")
-            total_edges += count
-        lines.append(f"  Total: {total_edges}")
 
         return "\n".join(lines)
 
@@ -325,7 +316,7 @@ class GraphAnnotator:
         self,
         edge_uuids: Set[str],
         source: str,
-    ) -> int:
+    ):
         """
         Mark edges with matching edge_uuid as malicious.
         Must scan across all relationship types.
@@ -342,12 +333,3 @@ class GraphAnnotator:
         with self._driver.session(database=self._database) as session:
             for chunk in _chunks(rows, _CHUNK):
                 session.run(query, rows=chunk).consume()
-
-        with self._driver.session(database=self._database) as session:
-            result = session.run(
-                "MATCH ()-[r:writes|isReadBy|sends|isReceivedBy|forks|isExecutedBy {malicious: true}]->() WHERE r.edge_uuid IN $euuids RETURN count(r) AS c",
-                euuids=list(edge_uuids),
-            )
-            matched = result.single()["c"] # type: ignore
-
-        return matched
