@@ -132,7 +132,7 @@ ALL_SLICES: List[AttackSlice] = E3_SLICES + E5_SLICES + OPTC_SLICES
 
 def build(slices: List[AttackSlice], skip_existing: bool = True) -> None:
     """build graph instances sequentially."""
-    manager = Neo4jInstanceManager()
+    manager = Neo4jInstanceManager()  # only used for instance path checks
 
     for i, s in enumerate(slices, 1):
         t_start_ns = date_string_to_ns_timestamp(s.t_start)
@@ -151,6 +151,7 @@ def build(slices: List[AttackSlice], skip_existing: bool = True) -> None:
             logger.info("  SKIP — instance already exists with data: %s", inst_path)
             continue
 
+        builder = None
         try:
             builder = GraphBuilder(
                 dataset=s.dataset,
@@ -164,11 +165,12 @@ def build(slices: List[AttackSlice], skip_existing: bool = True) -> None:
             logger.exception("FAILED building %s — continuing to next slice.", name)
 
         finally:
-            # stop Neo4j before moving to the next slice
-            try:
-                manager.stop()
-            except Exception:
-                logger.warning("Could not stop Neo4j cleanly, continuing anyway.")
+            # stop Neo4j via the builder that owns the process
+            if builder is not None:
+                try:
+                    builder.teardown()
+                except Exception:
+                    logger.warning("Could not stop Neo4j cleanly, continuing anyway.")
 
         logger.info("")
 
