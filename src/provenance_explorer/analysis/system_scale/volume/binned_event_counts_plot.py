@@ -52,6 +52,11 @@ BIN_WIDTH_NS = 5 * 60 * 10**9
 BIN_WIDTH_S = 5 * 60
 CATEGORY_COLUMNS = [e.name.lower() for e in EdgeCategory]
 
+NS_PER_SEC = 1_000_000_000
+EARLIEST_TOLERATED_NS_TS = int(
+    datetime.fromisoformat("2015-01-01").timestamp()
+) * NS_PER_SEC
+
 def _bin_start(timestamp_ns: int) -> int:
     return (timestamp_ns // BIN_WIDTH_NS) * BIN_WIDTH_NS
 
@@ -146,6 +151,7 @@ class BinnedEventCountsPlot(PlotPipeline):
         for row_idx, host_id in enumerate(hosts):
             ax = axes[row_idx, 0]
             host_df = data[data["host_id"] == host_id].copy()
+            host_df = host_df[host_df["bin_start_ns"] >= EARLIEST_TOLERATED_NS_TS]
 
             # build dense time axis for this host
             t_min = host_df["bin_start_ns"].min()
