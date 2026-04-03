@@ -47,6 +47,12 @@ from provenance_explorer.registry.registry_all import CACHE_ROOT
 
 BIN_WIDTH_NS = 5 * 60 * 10**9  # 5 minutes in nanoseconds
 
+BIN_WIDTH_NS = 5 * 60 * 10**9  # 5 minutes in nanoseconds
+NS_PER_SEC = 1_000_000_000
+EARLIEST_TOLERATED_NS_TS = int(
+    datetime.fromisoformat("2015-01-01").timestamp()
+) * NS_PER_SEC
+
 def _bin_start(timestamp_ns: int) -> int:
     return (timestamp_ns // BIN_WIDTH_NS) * BIN_WIDTH_NS
 
@@ -167,7 +173,8 @@ class ActivityEvolutionPlot(PlotPipeline):
         )
 
         for host, color in zip(hosts, colors):
-            hdf = data[data["host_id"] == host]
+            hdf = data[data["host_id"] == host].copy()
+            hdf = hdf[hdf["bin_start_ns"] >= EARLIEST_TOLERATED_NS_TS]
             dts = [
                 datetime.fromtimestamp(b / 1e9, tz=timezone.utc)
                 for b in hdf["bin_start_ns"]
