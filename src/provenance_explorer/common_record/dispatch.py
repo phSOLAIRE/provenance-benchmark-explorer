@@ -183,7 +183,10 @@ def dispatch_cdm_event(
     pid = resolved_info.pid if resolved_info else None
     cmdline = resolved_info.cmdline if resolved_info else None
     if not cmdline and raw_event_type == "EVENT_EXECUTE": 
-        prop_map_cmdline = record_value.get("properties",{}).get("map",{}).get("cmdLine",{})
+        data = record_value or {}
+        data = data.get("properties") or {}
+        data = data.get("map") or {}
+        prop_map_cmdline = data.get("cmdLine")
         cmdline = prop_map_cmdline if prop_map_cmdline else None
     principal_uuid = (
         bytes_to_uuid(resolved_info.principal_uuid)
