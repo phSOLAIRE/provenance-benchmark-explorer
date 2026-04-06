@@ -39,6 +39,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
+import re
 from matplotlib.figure import Figure
 
 from provenance_explorer.plotting import PlotPipeline, palette
@@ -126,7 +127,7 @@ class ActivityEvolutionPlot(PlotPipeline):
 
     def _inventory_path(self, dataset: str, sub_dataset: str) -> Path:
         """Path for the side-effect cmdline inventory JSON."""
-        base = CACHE_ROOT / self.__class__.__name__
+        base = CACHE_ROOT / re.sub(r"(?<!^)(?=[A-Z])", "_", self.__class__.__name__).lower()
         rel = self.relative_path(dataset=dataset, sub_dataset=sub_dataset)
         return base / f"{rel}_cmdline_inventory.json"
 
