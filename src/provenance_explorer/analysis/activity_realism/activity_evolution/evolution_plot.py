@@ -150,14 +150,27 @@ class ActivityEvolutionPlot(PlotPipeline):
         data: pd.DataFrame,
         dataset: str,
         sub_dataset: str,
+        normalize_fn: Callable[[str], str] | None = None,
         **kwargs: Any,
     ) -> Figure:
         if data.empty:
             fig, ax = plt.subplots()
             ax.set_title(f"No data — {dataset}/{sub_dataset}")
             return fig
-
-        saturation = _ledger_to_saturation(data)
+ 
+        if normalize_fn is not None:
+            # re-normalise cmdlines and re-aggregate
+            df = data.copy()
+            df["normalised_cmdline"] = df["normalised_cmdline"].map(normalize_fn)
+            df = (
+                df.groupby(["host_id", "normalised_cmdline"], as_index=False)
+                .agg(first_seen_ns=("first_seen_ns", "min"),
+                     total_event_count=("total_event_count", "sum"))
+            )
+        else:
+            df = data
+        
+        saturation = _ledger_to_saturation(df)
         hosts = sorted(saturation["host_id"].unique())
         colors = palette()
 
