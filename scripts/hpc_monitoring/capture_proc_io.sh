@@ -1,5 +1,5 @@
 #!/bin/bash
-# capture_proc_io.sh — Sample /proc/<pid>/io for all user processes on a login node.
+# capture_proc_io.sh - Sample /proc/<pid>/io for all user processes on a login node.
 #
 # Captures per-process I/O syscall counts and byte volumes every INTERVAL seconds.
 #
@@ -36,7 +36,7 @@ get_outfile() {
     fi
 }
 
-echo "$($DATE_CMD) — capture_proc_io.sh started, interval=${INTERVAL}s, duration=${DURATION}s, output=${OUT_DIR}/" >&2
+echo "$($DATE_CMD) - capture_proc_io.sh started, interval=${INTERVAL}s, duration=${DURATION}s, output=${OUT_DIR}/" >&2
 echo "PID file: /tmp/capture_proc_io.pid ($$)" >&2
 
 while true; do
@@ -45,7 +45,7 @@ while true; do
     if [ "$DURATION" -gt 0 ]; then
         elapsed=$((ts - START))
         if [ "$elapsed" -ge "$DURATION" ]; then
-            echo "$($DATE_CMD) — Duration limit reached (${DURATION}s). Exiting." >&2
+            echo "$($DATE_CMD) - Duration limit reached (${DURATION}s). Exiting." >&2
             break
         fi
     fi
@@ -101,7 +101,7 @@ while true; do
     # log
     scan_end=$($DATE_CMD +%s)
     scan_duration=$((scan_end - ts))
-    echo "$($DATE_CMD -d @$ts '+%Y-%m-%d %H:%M:%S') — collected $collected processes, skipped $skipped, scan took ${scan_duration}s" >&2
+    echo "$($DATE_CMD -d @$ts '+%Y-%m-%d %H:%M:%S') - collected $collected processes, skipped $skipped, scan took ${scan_duration}s" >&2
 
     # sleep
     remaining=$((INTERVAL - scan_duration))
@@ -112,5 +112,5 @@ while true; do
     fi
 done
 
-echo "$($DATE_CMD) — capture_proc_io.sh finished." >&2
+echo "$($DATE_CMD) - capture_proc_io.sh finished." >&2
 rm -f /tmp/capture_proc_io.pid
