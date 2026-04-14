@@ -23,6 +23,7 @@ Example usage in notebook:
 
 from __future__ import annotations
 
+import re
 from collections import defaultdict
 from datetime import datetime, timezone
 from typing import Any, Callable
@@ -34,7 +35,9 @@ import matplotlib.dates as mdates
 from matplotlib.figure import Figure
 
 from provenance_explorer.plotting import PlotPipeline, palette
-from provenance_explorer.common_record import iterate_common_records, DropLog
+from provenance_explorer.raw_file_handling.dataset_iterator import make_dataset_iterator
+from provenance_explorer.raw_file_handling.parsing_helpers import TS_EXTRACTORS
+from provenance_explorer.registry.registry_all import get_subdataset_registry
 
 BIN_WIDTH_NS = 5 * 60 * 10**9  # 5 minutes in nanoseconds
 NS_PER_SEC = 1_000_000_000
@@ -42,8 +45,50 @@ EARLIEST_TOLERATED_NS_TS = int(
     datetime.fromisoformat("2015-01-01").timestamp()
 ) * NS_PER_SEC
 
+# CDM regex: extract hostId + cmdLine from any record type
+_CDM_HOST_RE = re.compile(r'"hostId":"([^"]+)"')
+# "cmdLine":{"string":"..."} (used by most sub-datasets)
+_CDM_CMD_WRAPPED_RE = re.compile(r'"cmdLine":\{"string":"([^"]+)"\}')
+# "cmdLine":"..." (form used by e3/cadets Events, e5/cadets Events, and inside Theia properties maps)
+_CDM_CMD_DIRECT_RE = re.compile(r'"cmdLine":"([^"]+)"')
+
+# ECAR (OpTC) regex
+_ECAR_HOST_RE = re.compile(r'"hostname":"([^"]+)"')
+_ECAR_CMD_RE = re.compile(r'"command_line":"([^"]+)"')
+
+
+def _cdm_cmd_parser(line: str) -> tuple[str, str] | None:
+    host_m = _CDM_HOST_RE.search(line)
+    if host_m is None:
+        return None
+    cmd_m = _CDM_CMD_WRAPPED_RE.search(line)
+    if cmd_m is None:
+        cmd_m = _CDM_CMD_DIRECT_RE.search(line)
+    if cmd_m is None:
+        return None
+    return cmd_m.group(1), host_m.group(1)
+
+
+def _ecar_cmd_parser(line: str) -> tuple[str, str] | None:
+    host_m = _ECAR_HOST_RE.search(line)
+    cmd_m = _ECAR_CMD_RE.search(line)
+    if host_m is None or cmd_m is None:
+        return None
+    return cmd_m.group(1), host_m.group(1)
+
+
+def _get_cmd_parser(ds: str):
+    if ds in ("e3", "e5"):
+        return _cdm_cmd_parser
+    elif ds == "optc":
+        return _ecar_cmd_parser
+    else:
+        raise ValueError(f"Unknown dataset: {ds}")
+
+
 def _bin_start(timestamp_ns: int) -> int:
     return (timestamp_ns // BIN_WIDTH_NS) * BIN_WIDTH_NS
+
 
 def _collect_first_seen_ledger(
     dataset: str,
@@ -54,9 +99,10 @@ def _collect_first_seen_ledger(
     Returns a df with one row per unique (host_id, normalised_cmdline):
         host_id, normalised_cmdline, first_seen_ns, total_event_count
     """
-    logger = DropLog()
-    iterator = iterate_common_records(
-        dataset, sub_dataset, drop_log=logger,
+    iterator = make_dataset_iterator(
+        get_subdataset_registry(dataset, sub_dataset),
+        ts_extractor=TS_EXTRACTORS[dataset, sub_dataset],
+        parse_fn=_get_cmd_parser(dataset),
     )
 
     # first_seen: host -> cmdline -> timestamp_ns of first occurrence
@@ -65,24 +111,24 @@ def _collect_first_seen_ledger(
     counts: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
 
     n_records = 0
-    for record in iterator:
-        if record.cmdline is None:
+    for ts, pair in iterator:
+        if pair is None:
+            continue
+        if ts < EARLIEST_TOLERATED_NS_TS:
             continue
 
-        cmd = normalize_fn(record.cmdline)
-        host = record.host_id
-        ts = record.timestamp_ns
+        cmdline, host_id = pair
+        cmd = normalize_fn(cmdline)
 
-        counts[host][cmd] += 1
+        counts[host_id][cmd] += 1
 
-        if cmd not in first_seen[host]:
-            first_seen[host][cmd] = ts
+        if cmd not in first_seen[host_id]:
+            first_seen[host_id][cmd] = ts
 
         n_records += 1
         if n_records % 10_000_000 == 0:
             print(f"\t{n_records / 1e6:.0f}M records processed")
 
-    logger.summary(dataset, sub_dataset)
     print(f"\tdone. {n_records:,} records with cmdline")
 
     rows = []
