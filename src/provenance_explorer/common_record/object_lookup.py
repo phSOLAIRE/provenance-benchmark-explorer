@@ -687,8 +687,8 @@ class ObjectLookup:
             obj._db_path = sqlite_p
             obj._conn = sqlite3.connect(f"file:{sqlite_p}?mode=ro", uri=True)
             obj._lru = OrderedDict()
-            cursor = obj._conn.execute("SELECT COUNT(*) FROM lookup")
-            obj._entry_count = cursor.fetchone()[0]
+            # cursor = obj._conn.execute("SELECT COUNT(*) FROM lookup")
+            obj._entry_count = -1# cursor.fetchone()[0]
             obj._finalized = True
             logger.info(f"Loaded (SQLite): {obj._entry_count} entries, "
                         f"{len(obj.host_metadata)} hosts, "
