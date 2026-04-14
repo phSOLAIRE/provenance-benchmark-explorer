@@ -15,7 +15,7 @@ Displays the data as a table with percentages in each sub dataset: <sub_dataset>
 
 Example usage in notebook: 
 
-    from provenance_explorer.analysis.provenance_capture.correctness.data_model_types_plot import DataModelTypesPlot
+    from provenance_explorer.analysis.provenance_capture.data_model_types_plot import DataModelTypesPlot
     from provenance_explorer.plotting import apply_style
 
     apply_style()

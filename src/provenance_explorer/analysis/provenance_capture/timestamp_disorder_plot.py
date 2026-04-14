@@ -14,7 +14,7 @@ We characterise these errors with three streaming statistics per host:
 
 Example usage in notebook:
 
-    from provenance_explorer.analysis.provenance_capture.correctness.timestamp_disorder_plot import TimestampDisorderPlot
+    from provenance_explorer.analysis.provenance_capture.timestamp_disorder_plot import TimestampDisorderPlot
     from provenance_explorer.plotting import apply_style
 
     apply_style()

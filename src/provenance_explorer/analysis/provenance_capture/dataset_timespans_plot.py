@@ -3,7 +3,7 @@ DatasetTimespansPlot
 
 Example usage in jupyter notebook::
 
-    from provenance_explorer.analysis.provenance_capture.correctness.dataset_timespans_plot import DatasetTimespansPlot
+    from provenance_explorer.analysis.provenance_capture.dataset_timespans_plot import DatasetTimespansPlot
     from provenance_explorer.plotting.config import apply_style
 
     DATSET = "optc"
