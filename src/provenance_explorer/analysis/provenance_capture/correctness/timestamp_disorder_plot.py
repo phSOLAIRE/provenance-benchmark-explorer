@@ -1,13 +1,14 @@
 """
 TimestampDisorderPlot
 
-Measure timestamp ordering errors across all sub-datasets in a dataset. The plot is a horizontal box-plot-ish chart clamped at 0.
+Measure timestamp ordering errors per host within a single sub-dataset.
+The plot is a horizontal box-plot-ish chart clamped at 0.
 
-Since Kafka sequence numbers are perfectly ordered, the "true" record order is known.  
-Any record whose timestamp is earlier than its predecessor's is a backward jump.  
-We characterise these errors with three streaming statistics (no data structures):
+Since Kafka sequence numbers are perfectly ordered, the "true" record order is known.
+Any record whose timestamp is earlier than its predecessor's is a backward jump.
+We characterise these errors with three streaming statistics per host:
 
-    - ()online mean backward-jump magnitude
+    - (online) mean backward-jump magnitude
     - (online) std of backward-jump magnitude (calculated as welford online variance for numerical stability)
     - max backward-jump magnitude
 
@@ -19,8 +20,8 @@ Example usage in notebook:
     apply_style()
 
     plot = TimestampDisorderPlot()
-    # plot.invalidate(dataset="e3")
-    fig  = plot.run(dataset="e3")
+    # plot.invalidate(dataset="e3", sub_dataset="cadets")
+    fig  = plot.run(dataset="e3", sub_dataset="cadets")
 """
 
 from __future__ import annotations
@@ -28,6 +29,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
+import re
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.figure import Figure
@@ -37,30 +39,60 @@ from provenance_explorer.plotting import PlotPipeline
 from provenance_explorer.raw_file_handling.dataset_iterator import make_dataset_iterator
 from provenance_explorer.raw_file_handling.parsing_helpers import TS_EXTRACTORS
 
-from provenance_explorer.registry.darpa_e3_registry import E3_ALL
-from provenance_explorer.registry.darpa_e5_registry import E5_ALL
-from provenance_explorer.registry.darpa_optc_registry import OPTC_ALL
+from provenance_explorer.registry.registry_all import get_subdataset_registry
 
 NS_PER_SEC = 1_000_000_000
 EARLIEST_TOLERATED_NS_TS = int(
     datetime.fromisoformat("2015-01-01").timestamp()
 ) * NS_PER_SEC
 
-DATASET_REGISTRIES: dict[str, dict] = {
-    "e3": E3_ALL,
-    "e5": E5_ALL,
-    "optc": OPTC_ALL,
-}
+_EVENT_RE = re.compile(
+    r'"com\.bbn\.tc\.schema\.avro\.cdm\d+\.Event"'
+    r'.*?"hostId":"([^"]+)"'
+)
+
+_ECAR_RE = re.compile(
+    r'"action":"([^"]+)"'
+    r'.*?"hostname":"([^"]+)"'
+)
+
+def _ecar_parser(line: str) -> tuple[str, str] | None:
+    m = _ECAR_RE.search(line)
+    if m is None:
+        return None
+    action, hostname, obj = '', m.group(2), ''
+    return '' , hostname
+
+def _cdm_parser(line: str) -> tuple[str, str] | None:
+    m = _EVENT_RE.search(line)
+    if m is None:
+        return None
+    try:
+        return '', m.group(1)
+    except:
+        from pprint import pprint
+        pprint(line)
+        raise
+
+def _get_parser(ds):
+    if ds == "e3" or ds == "e5":
+        return _cdm_parser
+    elif ds == "optc":
+        return _ecar_parser
+    else:
+        raise
 
 
 def _collect_disorder_stats(
     dataset: str,
+    sub_dataset: str,
 ) -> dict[str, dict[str, Any]]:
     """
-    maintain statistic uisng Welford, so we dont save whole sequences and do nto get numeric instability on varaince.
+    Maintain statistics per host using Welford's algorithm so we don't save
+    whole sequences and don't get numeric instability on variance.
 
     Returns:
-        {sub_dataset: {
+        {host_id: {
             "n_total": int,
             "n_errors": int,
             "error_rate": float,
@@ -69,60 +101,74 @@ def _collect_disorder_stats(
             "max_error_s": float,
         }}
     """
-    all_registries = DATASET_REGISTRIES[dataset]
-    dumb_parse = lambda _line: None
+    registry = get_subdataset_registry(dataset, sub_dataset)
+    ts_fn = TS_EXTRACTORS[(dataset, sub_dataset)]
+    parse_fn = _get_parser(dataset)
+
+    iterator = make_dataset_iterator(
+        registry=registry,
+        parse_fn=parse_fn,
+        ts_extractor=ts_fn,
+    )
+
+    # Per-host streaming state
+    last_ts: dict[str, int] = {}
+    n_total: dict[str, int] = {}
+    n_errors: dict[str, int] = {}
+    mean_error_ns: dict[str, float] = {}
+    M2: dict[str, float] = {}
+    max_error_ns: dict[str, int] = {}
+
+    for ts_ns, pair in iterator:
+        if pair is None:
+            continue
+        if ts_ns < EARLIEST_TOLERATED_NS_TS:
+            continue
+
+        _event_type, host_id = pair
+
+        if host_id not in n_total:
+            last_ts[host_id] = 0
+            n_total[host_id] = 0
+            n_errors[host_id] = 0
+            mean_error_ns[host_id] = 0.0
+            M2[host_id] = 0.0
+            max_error_ns[host_id] = 0
+
+        n_total[host_id] += 1
+
+        if ts_ns < last_ts[host_id]:
+            error = last_ts[host_id] - ts_ns
+            n_errors[host_id] += 1
+            delta = error - mean_error_ns[host_id]
+            mean_error_ns[host_id] += delta / n_errors[host_id]
+            delta2 = error - mean_error_ns[host_id]
+            M2[host_id] += delta * delta2
+            if error > max_error_ns[host_id]:
+                max_error_ns[host_id] = error
+
+        last_ts[host_id] = ts_ns
+
     results: dict[str, dict[str, Any]] = {}
+    for host_id in n_total:
+        ne = n_errors[host_id]
+        nt = n_total[host_id]
+        variance = M2[host_id] / ne if ne > 1 else 0.0
 
-    for name, registry in all_registries.items():
-        key = name.lower().replace("-", "_")
-        ts_fn = TS_EXTRACTORS[(dataset, key)]
-
-        iterator = make_dataset_iterator(
-            registry=registry,
-            parse_fn=dumb_parse,
-            ts_extractor=ts_fn,
-        )
-
-        last_ts = 0
-        n_total = 0
-        n_errors = 0
-        mean_error_ns = 0.0
-        M2 = 0.0
-        max_error_ns = 0
-
-        for ts_ns, _ in iterator:
-            if ts_ns is None or ts_ns < EARLIEST_TOLERATED_NS_TS:
-                continue
-            n_total += 1
-
-            if ts_ns < last_ts:
-                error = last_ts - ts_ns
-                n_errors += 1
-                delta = error - mean_error_ns
-                mean_error_ns += delta / n_errors
-                delta2 = error - mean_error_ns
-                M2 += delta * delta2
-                if error > max_error_ns:
-                    max_error_ns = error
-
-            last_ts = ts_ns
-
-        variance = M2 / n_errors if n_errors > 1 else 0.0
-
-        results[key] = {
-            "n_total": n_total,
-            "n_errors": n_errors,
-            "error_rate": n_errors / n_total if n_total else 0.0,
-            "mean_error_s": mean_error_ns / NS_PER_SEC,
+        results[host_id] = {
+            "n_total": nt,
+            "n_errors": ne,
+            "error_rate": ne / nt if nt else 0.0,
+            "mean_error_s": mean_error_ns[host_id] / NS_PER_SEC,
             "std_error_s": variance**0.5 / NS_PER_SEC,
-            "max_error_s": max_error_ns / NS_PER_SEC,
+            "max_error_s": max_error_ns[host_id] / NS_PER_SEC,
         }
         print(
-            f"{dataset}/{key}:"
-            f"errors={n_errors:,} ({results[key]['error_rate']:.4%})\n"
-            f"mean={results[key]['mean_error_s']:.4f}s\n"
-            f"std={results[key]['std_error_s']:.4f}s\n"
-            f"max={results[key]['max_error_s']:.4f}s\n"
+            f"{dataset}/{sub_dataset}/{host_id[:16]}:"
+            f"  errors={ne:,} ({results[host_id]['error_rate']:.4%})"
+            f"  mean={results[host_id]['mean_error_s']:.4f}s"
+            f"  std={results[host_id]['std_error_s']:.4f}s"
+            f"  max={results[host_id]['max_error_s']:.4f}s"
         )
 
     return results
@@ -134,30 +180,23 @@ class TimestampDisorderPlot(PlotPipeline):
     def cache_suffix(self) -> str:
         return "json"
 
-    def relative_path(self, dataset: str, **kwargs: Any) -> str:
-        return f"{dataset}/timestamp_disorder"
+    def relative_path(self, dataset: str, sub_dataset: str, **kwargs: Any) -> str:
+        return f"{dataset}/{sub_dataset}/timestamp_disorder"
 
-    def retrieve_data(self, dataset: str, **kwargs: Any) -> Any:
-        return _collect_disorder_stats(dataset)
+    def retrieve_data(self, dataset: str, sub_dataset: str, **kwargs: Any) -> Any:
+        return _collect_disorder_stats(dataset, sub_dataset)
 
     def make_plot(
-        self, data: dict[str, dict], dataset: str, **kwargs: Any
+        self, data: dict[str, dict], dataset: str, sub_dataset: str, **kwargs: Any
     ) -> Figure:
         if not data:
             fig, ax = plt.subplots()
-            ax.set_title(f"No data — {dataset}")
+            ax.set_title(f"No data — {dataset}/{sub_dataset}")
             return fig
 
-        # # sub-datasets with zero errors
-        # data = {k: v for k, v in data.items() if v["n_errors"] > 0}
-        # if not data:
-        #     fig, ax = plt.subplots()
-        #     ax.set_title(f"No timestamp errors found — {dataset}")
-        #     return fig
-
-        # sort by mean error 
+        # sort by mean error
         items = sorted(data.items(), key=lambda kv: kv[1]["mean_error_s"])
-        names = [k for k, _ in items]
+        names = [k[:20] for k, _ in items]
         means = [v["mean_error_s"] for _, v in items]
         stds = [v["std_error_s"] for _, v in items]
         maxes = [v["max_error_s"] for _, v in items]
@@ -206,7 +245,7 @@ class TimestampDisorderPlot(PlotPipeline):
         ax.set_yticks(y)
         ax.set_yticklabels(names)
         ax.set_xlabel("Backward timestamp jump (seconds, log scale)")
-        ax.set_title(f"Timestamp Disorder — {dataset}")
+        ax.set_title(f"Timestamp Disorder — {dataset}/{sub_dataset}")
 
         ax.legend(
             handles=[
