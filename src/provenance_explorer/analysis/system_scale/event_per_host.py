@@ -1,7 +1,7 @@
 """
 Example usage in notebook:
 
-    from provenance_explorer.analysis.system_scale.volume.event_per_host import EventsPerHostPlot
+    from provenance_explorer.analysis.system_scale.event_per_host import EventsPerHostPlot
     from provenance_explorer.plotting import apply_style
 
     apply_style()
