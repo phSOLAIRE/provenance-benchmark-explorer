@@ -75,3 +75,22 @@ def extract_timing_errors(
             "timing_max_error_s": stats["max_error_s"],
         })
     return pd.DataFrame(rows)
+
+def compute_timespan_per_host(
+    event_counts: pd.DataFrame,
+    time_col: str = "time_bin_ns",
+    host_col: str = "host_id",
+) -> pd.DataFrame:
+    """Timespan in days from first to last bin per host."""
+    NS_PER_DAY = 24 * 3600 * 1_000_000_000
+
+    results = []
+    for host, grp in event_counts.groupby(host_col):
+        t_min = grp[time_col].min()
+        t_max = grp[time_col].max()
+        results.append({
+            "host_id": host,
+            "timespan_days": round((t_max - t_min) / NS_PER_DAY, 2),
+        })
+
+    return pd.DataFrame(results)
