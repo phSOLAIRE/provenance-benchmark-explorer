@@ -1,3 +1,6 @@
+*.xlsx
+*.csv
+*.parquet
 provenance-explorer-cache/
 thesis_metrics.*
 thesis_plots.*
