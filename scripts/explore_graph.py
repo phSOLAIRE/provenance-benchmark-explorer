@@ -12,13 +12,54 @@ Usage:
 from __future__ import annotations
 
 import signal
+from datetime import datetime, timezone
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 from provenance_explorer.neo4j_graph import Neo4jInstanceManager, GraphAnnotator
 from provenance_explorer.neo4j_graph.annotator import PM, FL, WW, RV
 from provenance_explorer.registry.attack_data import ATTACK_DATA
 
 SOURCE_NAMES = {PM: "PIDSMaker/Orthrus", FL: "Flash/ThreatTrace", WW: "WWTAWWTAL", RV: "Revisiting OpTC"}
+
+EDT = ZoneInfo("America/New_York")
+UTC = timezone.utc
+
+def _parse_instance_bounds(instance_name: str) -> tuple[datetime, datetime] | None:
+    """get (start_utc, end_utc) from instance name."""
+    parts = instance_name.split("__")
+    if len(parts) < 3:
+        return None
+    try:
+        start = datetime.strptime(parts[1], "%Y%m%dT%H%M%S").replace(tzinfo=UTC)
+        end   = datetime.strptime(parts[2], "%Y%m%dT%H%M%S").replace(tzinfo=UTC)
+    except ValueError:
+        return None
+    return start, end
+
+def _windows_within_instance(instance_name: str) -> list[tuple[str, str]]:
+    """
+    return [(descrpt, "HH:MM EDT -> HH:MM EDT"), ...] for ATTACK_DATA windows that overlap the instance's UTC time range.
+    """
+    key = _resolve_registry_key(instance_name)
+    bounds = _parse_instance_bounds(instance_name)
+    if key is None or bounds is None:
+        return []
+    inst_start, inst_end = bounds
+
+    out: list[tuple[str, str]] = []
+    for (start_edt_str, end_edt_str), win in ATTACK_DATA[key]["windows"].items():
+        try:
+            w_start = datetime.strptime(start_edt_str, "%Y-%m-%d %H:%M:%S").replace(tzinfo=EDT)
+            w_end   = datetime.strptime(end_edt_str,   "%Y-%m-%d %H:%M:%S").replace(tzinfo=EDT)
+        except ValueError:
+            continue
+        # overlap test in UTC
+        if w_end.astimezone(UTC) < inst_start or w_start.astimezone(UTC) > inst_end:
+            continue
+        label = f"{w_start.strftime('%m-%d %H:%M')} -> {w_end.strftime('%H:%M')} EDT"
+        out.append((win.get("descrpt", "(no description)"), label))
+    return out
 
 def check_and_stop_running(manager: Neo4jInstanceManager) -> None:
     """Check if a Neo4j process is already listening on the bolt port and offer to stop it."""
@@ -51,6 +92,8 @@ def select_instance(manager: Neo4jInstanceManager) -> "Path":
     print(f"\n  Available graph instances ({len(instances)}):\n")
     for i, inst in enumerate(instances, 1):
         print(f"    [{i:2d}]  {inst.name}")
+        for descrpt, when in _windows_within_instance(inst.name):
+            print(f"            - [{when}] {descrpt}")
 
     print()
     while True:
