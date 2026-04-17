@@ -13,18 +13,12 @@ e3_cadets_host = {
         "tactics": [
             "Initial Access", # Nginx exploit via malformed HTTP POST
             "Execution", # loaderDrakon, elevated vUgefal process, netrecon module
-            "Persistence", # ATTEMPTED sshd injection (PID 809) failed
+            # "Persistence", # ATTEMPTED sshd injection (PID 809) failed
             "Privilege Escalation", # elevate /tmp/vUgefal -> root
             "Defense Evasion", # libdrakon staged at /var/log/devc (log-path masquerade); in-memory loader
-            "Discovery", # nrinfo, ps, netrecon module
+            "Discovery", # nrinfo, ps, netrecon (!) module
             "Command and Control", # loaderDrakon console, nrtcp to 61.167.39.128:80
         ],
-    },
-
-    ("2018-04-06 15:00:00", "2018-04-06 15:20:00"): {
-        "descrpt": "Postfix relay used for phishing",
-        "report_sec": "4.1",
-        "tactics": [], # unclear whether this belongs in cadets attack timeline at all; 'infrastructure abuse'
     },
 
     ("2018-04-11 15:08:00", "2018-04-11 15:15:00"): {
@@ -33,7 +27,7 @@ e3_cadets_host = {
         "tactics": [
             "Initial Access", # Nginx re-exploited with malformed HTTP POSD
             "Execution", # loaderDrakon in nginx memory
-            "Persistence", # ATTEMPTED sshd PID 802 injection failed, caused kernel panic
+            # "Persistence", # ATTEMPTED sshd PID 802 injection failed, caused kernel panic
             "Defense Evasion", # libdrakon staged as /tmp/grain, in-memory loader
             "Command and Control", # loaderDrakon shell
             # No Privilege Escalation in this window (no elevate before crash)
@@ -62,26 +56,13 @@ e3_cadets_host = {
             "Persistence", # ATTEMPTED sshd PID 20691 injection (memhelp.so/eraseme/done.so)
             "Privilege Escalation", # elevate /tmp/pEja72mA
             "Defense Evasion", # multiple renames of same .so (eWq10bVcx -> memhelp.so -> eraseme -> done.so), log-path-ish names
-            "Discovery", # ps, whoami
+            # "Discovery", # ps, whoami
             "Command and Control", # drakon pEja72mA connection
         ],
     },
 }
 
 e3_clearscope_host = {
-    ("2018-04-06 15:02:00", "2018-04-06 15:17:00"): {
-        "descrpt": "Phishing E-mail Link -> credential harvest (nasa.ng / foo1.com)",
-        "report_sec": "4.2",
-        "tactics": [
-            "Initial Access", # phishing link delivered via email
-            "Execution", # user clicks link, browser renders page (user-execution)
-            "Credential Access", # credential-harvest form on www.nasa.ng
-            "Collection", # credentials submitted
-            "Exfiltration", # POST to www.foo1.com (208.75.117.2)
-        ],
-        # NOTE: pure phish, maybe ditch to not confuse with interesting attacks
-    },
-
     ("2018-04-11 13:55:00", "2018-04-11 14:47:00"): {
         "descrpt": "Firefox Backdoor w/ Drakon In-Memory (mit.gov.jo)",
         "report_sec": "3.6",
@@ -90,9 +71,9 @@ e3_clearscope_host = {
             "Execution", # drakon in firefox memory; elevated shared_files drakon as root
             "Privilege Escalation", # elevate /data/.../shared_files
             "Defense Evasion", # in-memory loader; filename csb.tracee.27331.27355
-            "Persistence", # inject into PID 424 (installd) failed
-            "Discovery", # cat hosts
-            "Exfiltration", # exfil over C2 channel; not collection, as this is not used downstream
+            # "Persistence", # inject into PID 424 (installd) failed
+            # "Discovery", # cat hosts
+            # "Exfiltration", # exfil over C2 channel; not collection, as this is not used downstream
             "Command and Control", # connections A1-A4
         ],
     },
@@ -102,7 +83,7 @@ e3_clearscope_host = {
         "report_sec": "3.7",
         "tactics": [
             "Execution", # second drakon process elevated (shared_lib, A5)
-            "Persistence", # sshd injection (PID 424 installd) failed twice
+            #"Persistence", # sshd injection (PID 424 installd) failed twice
             "Privilege Escalation", # elevate shared_lib
             "Defense Evasion", # file names (libs, shared_lib, tmp18d17sn1); rm after use
             "Command and Control", # re-use of open A4 channel + new A5
@@ -119,7 +100,7 @@ e3_fivedirections_host = {
             "Execution", # user opened xlsm; macro auto-run FAILED, then manual powershell -encodedCommand
             "Defense Evasion", # base64-encoded powershell command; -ep bypass; downloadfile via WebClient
             "Discovery", # type hosts, type Document.rtf / MissleAlert.rtf / trains.rtf
-            "Exfiltration", # type on document files
+            "Exfiltration", # >type (displays text) on document files
             "Command and Control", # powercat reverse shell to 208.75.117.6:80
         ],
     },
@@ -143,25 +124,12 @@ e3_fivedirections_host = {
         "report_sec": "3.10",
         "tactics": [
             "Initial Access", # browser extension load via www.allstate.com
-            "Execution", # drakon execution from disk -> crashed, no callback
             "Defense Evasion", # dropper wrote to C:\Program Files\Mozilla Firefox\add-on\hJauWl01
         ],
     },
 }
 
 e3_theia_host = {
-    ("2018-04-10 13:00:00", "2018-04-10 13:42:00"): {
-        "descrpt": "Phishing E-mail Link -> credential harvest (nasa.ng / foo1.com)",
-        "report_sec": "4.6",
-        "tactics": [
-            "Initial Access", # phishing link (impersonating Bob)
-            "Execution", # user execution clicks link
-            "Credential Access", # nasa.ng form
-            "Exfiltration", # POST to foo1.com
-        ],
-        # NOTE: phishing only 
-    },
-
     ("2018-04-10 13:41:00", "2018-04-10 14:56:00"): {
         "descrpt": "Firefox Backdoor w/ Drakon In-Memory (allstate.com then gatech.edu)",
         "report_sec": "3.3",
@@ -182,9 +150,8 @@ e3_theia_host = {
             "Initial Access", # browser extension via gatech.edu
             "Execution", # drakon dropper; micro APT (mail) elevated as root
             "Privilege Escalation", # elevate /var/log/mail
-            "Persistence", # ATTEMPTED sshd PID 1226 injection (xdev/wdev/memtrace.so) all failed
             "Defense Evasion", # log-path masquerade (/var/log/xdev, /var/log/mail); rm after use; cp renames
-            "Discovery", # whoami, ps, micro APT portscan
+            "Discovery", # whoami, ps, micro APT portscan (!)
             "Command and Control", # gtcache drakon + micro APT C2
         ],
     },
@@ -200,16 +167,6 @@ e3_trace_host = {
             "Privilege Escalation", # elevate /home/admin/cache
             "Defense Evasion", # libdrakon staged at /var/log/xtmp; in-memory loader
             "Command and Control", # OC2 shells; L3 left open (later lost on OC2 crash)
-        ],
-    },
-
-    ("2018-04-10 12:28:00", "2018-04-10 12:35:00"): {
-        "descrpt": "Phishing E-mail Link -> credential harvest (nasa.ng / foo1.com)",
-        "report_sec": "4.5",
-        "tactics": [
-            "Initial Access", # mail
-            "Execution", # user clicks link
-            "Credential Access", # post form 
         ],
     },
 
@@ -234,6 +191,7 @@ e3_trace_host = {
         ],
     },
 
+    # actual start is more ~14:15
     ("2018-04-13 13:50:00", "2018-04-13 14:28:00"): {
         "descrpt": "Phishing E-mail w/ Executable Attachment + Pine exploit + Micro APT",
         "report_sec": "4.9",
@@ -242,7 +200,6 @@ e3_trace_host = {
             "Execution", # user ran tcexec (failed, missing QT lib); micro apt ran via vulnerable Pine
             "Defense Evasion", # attachment-named-tcexec; pine auto-exec of attachment
             "Discovery", # micro APT portscan
-            # "Collection", # tcexfil file written to /tmp (Pine-backdoor exfil staging)
             "Exfiltration", # tcexfil (staged for exfil per sec 4.9.1); likely exfild, but not reported 
             "Command and Control", # micro APT C2 (162.66.239.75)
         ],
