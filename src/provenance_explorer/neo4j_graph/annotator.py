@@ -6,9 +6,9 @@ Annotations set on nodes:
   malicious: true
   attack_sources: ["pidsmaker", "flash", ...]   (list, accumulated)
 
-Annotations set on edges (WWTAWWTAL edges, Revisiting OpTC):
-  malicious: true
-  attack_sources: ["wwtawwtal", ...]
+# Annotations set on edges (WWTAWWTAL edges, Revisiting OpTC):
+#   malicious: true
+#   attack_sources: ["wwtawwtal", ...]
 """
 
 from __future__ import annotations
@@ -190,9 +190,11 @@ class GraphAnnotator:
 
     Usage::
 
+        from provenance_explorer.registry.attack_data import ATTACK_DATA
+        entry = ATTACK_DATA[("e3", "cadets")]
         annotator = GraphAnnotator(driver)
-        annotator.annotate_from_registry(
-            registry_entry=E3_CADETS, # attack registry
+        annotator.annotate_from_label_files(
+            label_files=entry["label_files"],
             sources=["pidsmaker", "flash", "wwtawwtal"],
         )
         print(annotator.summary())
@@ -205,35 +207,33 @@ class GraphAnnotator:
         self._node_matches: Dict[str, int] = defaultdict(int)
 
     # Public API
-    def annotate_from_registry(
+    def annotate_from_label_files(
         self,
-        registry_entry: dict,
+        label_files: Dict[str, List[str]],
         sources: Optional[List[str]] = None,
     ) -> None:
         """
-        Walk all attack steps in attack registry, 
-        load referenced label files, and apply annotations to the graph.
-            - if sources'' is given, only process these label sources (e.g. ["pidsmaker"]); 
-            otherwise all.
+        Load each referenced label file and apply annotations to the graph.
+
+        label_files is a per-subdataset dict {source: [rel_path, ...]} defined in provenance_explorer.registry.attack_data.ATTACK_DATA
         """
         seen_files: Set[Path] = set()
         file_source_map: Dict[Path, str] = {}
 
-        for step in registry_entry["attacks"]:
-            for source, file_list in step["label_files"].items():
-                if sources is not None and source not in sources:
-                    continue
-                for rel_path in file_list:
-                    abs_path = DARPA_LABEL_PATH / rel_path
-                    seen_files.add(abs_path)
-                    file_source_map[abs_path] = source
+        for source, file_list in label_files.items():
+            if sources is not None and source not in sources:
+                continue
+            for rel_path in file_list:
+                abs_path = DARPA_LABEL_PATH / rel_path
+                seen_files.add(abs_path)
+                file_source_map[abs_path] = source
 
         for abs_path in seen_files:
             source = file_source_map[abs_path]
 
             if not abs_path.exists():
                 logger.warning("Label file not found: %s", abs_path)
-                raise
+                raise FileNotFoundError(abs_path)
 
             node_uuids, edge_uuids = load_label_file(source, abs_path)
 

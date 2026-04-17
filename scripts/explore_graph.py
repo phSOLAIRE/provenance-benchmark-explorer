@@ -12,14 +12,11 @@ Usage:
 from __future__ import annotations
 
 import signal
-import sys
 from pathlib import Path
 
 from provenance_explorer.neo4j_graph import Neo4jInstanceManager, GraphAnnotator
-from provenance_explorer.neo4j_graph.instance_manager import instance_dir_name
 from provenance_explorer.neo4j_graph.annotator import PM, FL, WW, RV
-from provenance_explorer.registry.registry_all import DATA_NE04J, DARPA_LABEL_PATH
-from provenance_explorer.registry.attack_registry import ALL_REGISTRIES
+from provenance_explorer.registry.attack_data import ATTACK_DATA
 
 SOURCE_NAMES = {PM: "PIDSMaker/Orthrus", FL: "Flash/ThreatTrace", WW: "WWTAWWTAL", RV: "Revisiting OpTC"}
 
@@ -66,29 +63,18 @@ def select_instance(manager: Neo4jInstanceManager) -> "Path":
             pass
         print(f"  Please enter a number between 1 and {len(instances)}.")
 
-def _resolve_registry_key(instance_name: str) -> tuple[str,str] | None:
+def _resolve_registry_key(instance_name: str) -> tuple[str, str] | None:
     """
-    Try to match an instance directory name to a registry key.
+    Match an instance directory name to an ATTACK_DATA key.
+    Instance dir format: {dataset}_{sub_dataset}__{start}__{end}
     """
-    # Strip the timestamp suffix
-    parts = instance_name.split("__")
-    if len(parts) >= 1:
-        prefix = parts[0]  # e.g. "e3_cadets"
-        parts = prefix.split("_")
-        dataset_id = (parts[0], parts[1])
-        if dataset_id in ALL_REGISTRIES:
-            return dataset_id
-    return None
+    prefix = instance_name.split("__", 1)[0]  # strip timestamps
+    if "_" not in prefix:
+        return None
+    dataset, sub_dataset = prefix.split("_", 1)
+    key = (dataset, sub_dataset)
+    return key if key in ATTACK_DATA else None
 
-
-def _find_available_sources(registry_entry: dict) -> dict[str, int]:
-    """Count how many label files exist per source for this registry entry."""
-    sources: dict[str, int] = {}
-    for step in registry_entry["attacks"]:
-        for source, file_list in step["label_files"].items():
-            sources.setdefault(source, 0)
-            sources[source] += len(file_list)
-    return sources
 
 def prompt_annotation(manager: Neo4jInstanceManager, instance_path: Path) -> None:
     registry_key = _resolve_registry_key(instance_path.name)
@@ -96,15 +82,16 @@ def prompt_annotation(manager: Neo4jInstanceManager, instance_path: Path) -> Non
         print(f"\tNo attack registry entry found for this instance. Skipping annotation.\n")
         return
 
-    registry_entry = ALL_REGISTRIES[registry_key]
-    available = _find_available_sources(registry_entry)
+    entry = ATTACK_DATA[registry_key]
+    label_files = entry["label_files"]
+    windows = entry["windows"]
 
-    if not available:
-        print(f"\tNo label files referenced in the attack registry for this instance.\n")
+    if not label_files:
+        print(f"\tNo label files referenced for {registry_key}. Skipping\n")
         return
 
     print(f"\n\tAttack registry: {registry_key}")
-    print(f"\t{len(registry_entry['attacks'])} attack steps documented.\n")
+    print(f"\t{len(windows)} attack windows documented.\n")
 
     choice = input("  Load attack labels into the graph? [Y/n]: ").strip().lower()
     if choice not in ("y", "yes"):
@@ -128,11 +115,11 @@ def prompt_annotation(manager: Neo4jInstanceManager, instance_path: Path) -> Non
             print(f"\tCleared.\n")
 
     # Show available sources
-    source_list = sorted(available.keys())
+    source_list = sorted(label_files.keys())
     print(f"\nAvailable label sources:\n")
     for i, src in enumerate(source_list, 1):
         name = SOURCE_NAMES.get(src, src)
-        count = available[src]
+        count = len(label_files[src])
         print(f"\t[{i}]  {name:25s}  ({count} file references)")
 
     print()
@@ -150,8 +137,8 @@ def prompt_annotation(manager: Neo4jInstanceManager, instance_path: Path) -> Non
     print(f"\tPlease hold the line...")
 
     annotator = GraphAnnotator(driver)
-    annotator.annotate_from_registry(
-        registry_entry=registry_entry,
+    annotator.annotate_from_label_files(
+        label_files=label_files,
         sources=selected_sources,
     )
 
