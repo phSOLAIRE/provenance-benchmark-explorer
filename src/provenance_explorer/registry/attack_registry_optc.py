@@ -22,6 +22,11 @@ optc_sysclient0201 = {
             "Lateral Movement", # invoke_wmi pivot to Sysclient0402 at 13:24:36
             "Command and Control", # PSE agent VL8B5T3U then LUAVR71T -> news.com:80 (132.197.158.98)
         ],
+        "labels": {
+            "pidsmaker": ["pidsmaker/node_h201_0923.csv"],
+            "flash": ["flash/optc.txt"],
+            "revisiting_optc": ["revisiting_optc/malicious.json"],
+        },
     },
 }
 
@@ -63,6 +68,11 @@ optc_sysclient0501 = {
         # 13:45 cleanup: delete fileTransfer1000.exe and export.zip
         # 13:46 RDP to Sysclient0974 (outbound pivot)
         # 15:28 close RDP session
+        "labels": {
+            "pidsmaker": ["pidsmaker/node_h501_0924.csv"],
+            "flash": ["flash/optc.txt"],
+            "revisiting_optc": ["revisiting_optc/malicious.json"],
+        },
     },
 }
 
@@ -77,6 +87,9 @@ optc_sysclient0974 = {
             "Collection", # browsed files (viewing/assessment, no exfil from this host)
             "Command and Control", # RDP session (tunneled through plink SSH from 0501)
         ],
+        "labels": {
+            "revisiting_optc": ["revisiting_optc/malicious.json"],
+        },
     },
 }
 
@@ -95,10 +108,15 @@ optc_sysclient0051 = {
             "Collection", # enum_applications (installed software inventory)
             "Command and Control", # meterpreter -> 53.192.68.50:8080; RDP at 13:42
         ],
+        "labels": {
+            "pidsmaker": ["pidsmaker/node_h051_0925.csv"],
+            "flash": ["flash/optc.txt"],
+            "revisiting_optc": ["revisiting_optc/malicious.json"],
+        },
     },
 }
 
-# # ABANDONED / TOO SHORT: 
+# # ABANDONED / TOO SHORT:
 # optc_sysclient0351 = {
 #     ("2019-09-25 11:23:31", "2019-09-25 11:24:30"): {
 #         "descrpt": "Supply chain: malicious Notepad++ update, meterpreter, migrate to lwabeat",
