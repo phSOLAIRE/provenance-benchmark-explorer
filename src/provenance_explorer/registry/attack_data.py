@@ -1,20 +1,24 @@
 """
-Per-subdataset attack data: merged time windows and label-file sets (including any label set taht might be plausible).
+- per-subdataset attack data
+- flat ATTACK_WINDOWS list for per-window metrics
 
-Time windows come from the per-host registries (attack_registry_{e3,e5,optc}.py) 
-    - Window keys are (start_edt_str, end_edt_str) tuples; 
-    - values inherit the per-host entry shape (descrpt, report_sec, tactics, ...).
-    - Label files are attached at subdataset level
+Each window carries its own labels dict {source: [rel_path, ...]} and here
+ATTACK_DATA derives its subdataset-level label_files union from those per-window assignments
 
 Usage::
-    from provenance_explorer.registry.attack_data import ATTACK_DATA
+    from provenance_explorer.registry.attack_data import ATTACK_DATA, ATTACK_WINDOWS
     entry = ATTACK_DATA[("e5", "cadets")]
     windows    = entry["windows"]      # {(start_edt_str, end_edt_str): {...}}
     label_set  = entry["label_files"]  # {PM: [...], FL: [...], ...}
+
+    for w in ATTACK_WINDOWS:
+        # w.dataset, w.subdataset, w.host, w.start_edt, w.end_edt, w.labels
+        ...
 """
 from __future__ import annotations
 
-from typing import Dict, Tuple
+from dataclasses import dataclass, field
+from typing import Dict, List, Tuple
 
 from provenance_explorer.registry.attack_registry_e3 import (
     e3_cadets_host,
@@ -50,6 +54,20 @@ WW = "wwtawwtal"
 RV = "revisiting_optc"
 
 
+@dataclass(frozen=True)
+class AttackWindow:
+    """One attacker-active time window on one host."""
+    dataset: str          # "e3" | "e5" | "optc"
+    subdataset: str       # "cadets" | "trace" | ... | "aia_201_225" | ...
+    host: str             # "cadets", "cadets_1", "sysclient0201", ...
+    start_edt: str        # "YYYY-MM-DD HH:MM:SS" (EDT, UTC-4)
+    end_edt: str
+    report_sec: str
+    descrpt: str
+    tactics: Tuple[str, ...]
+    labels: Dict[str, Tuple[str, ...]] = field(default_factory=dict)
+
+
 def _merge(*host_dicts: dict) -> dict:
     """Union per-host window dicts; keys are unique (start, end) tuples."""
     merged: dict = {}
@@ -57,161 +75,129 @@ def _merge(*host_dicts: dict) -> dict:
         merged.update(d)
     return merged
 
+# for addressing hsots directly use (dataset, subdataset, host) -> per-host window dict
+# Used to build ATTACK_WINDOWS and to derive subdataset-level label_files.
+_HOST_REGISTRIES: List[Tuple[str, str, str, dict]] = [
+    ("e3", "cadets", "cadets", e3_cadets_host),
+    ("e3", "trace", "trace", e3_trace_host),
+    ("e3", "theia", "theia", e3_theia_host),
+    ("e3", "fivedirections", "fivedirections", e3_fivedirections_host),
+    ("e3", "clearscope", "clearscope", e3_clearscope_host),
+    ("e5", "cadets", "cadets_1", e5_cadets_1),
+    ("e5", "cadets", "cadets_2", e5_cadets_2),
+    ("e5", "trace", "trace_1", e5_trace_1),
+    ("e5", "trace", "trace_2", e5_trace_2),
+    ("e5", "theia", "theia_1", e5_theia_1),
+    ("e5", "fivedirections", "fivedirections_1", e5_fivedirections_1),
+    ("e5", "fivedirections", "fivedirections_2", e5_fivedirections_2),
+    ("e5", "fivedirections", "fivedirections_3", e5_fivedirections_3),
+    ("e5", "marple", "marple_1", e5_marple_1),
+    ("e5", "clearscope", "clearscope_1", e5_clearscope_1),
+    ("e5", "clearscope", "clearscope_2", e5_clearscope_2),
+    ("optc", "aia_201_225", "sysclient0201", optc_sysclient0201),
+    ("optc", "aia_501_525", "sysclient0501", optc_sysclient0501),
+    ("optc", "aia_951_975", "sysclient0974", optc_sysclient0974),
+    ("optc", "aia_51_75", "sysclient0051", optc_sysclient0051),
+]
 
-# Per-subdataset bullish label-file sets. Paths are relative to DARPA_LABEL_PATH.
-# Annotator UNWIND-MATCHes by UUID, so unrelated files are no-ops.
-_E3_LABELS: Dict[str, Dict[str, list[str]]] = {
-    "cadets": {
-        PM: [
-            "pidsmaker/node_Nginx_Backdoor_06.csv",
-            "pidsmaker/node_Nginx_Backdoor_11.csv",
-            "pidsmaker/node_Nginx_Backdoor_12.csv",
-            "pidsmaker/node_Nginx_Backdoor_13.csv",
-        ],
-        FL: ["flash/cadets.json"],
-        WW: ["wwtawwtal/cadets_labels.csv",] # "wwtawwtal/cadets_edge_labels.csv"],
-    },
-    "trace": {
-        PM: [
-            "pidsmaker/node_trace_e3_firefox_0410.csv",
-            "pidsmaker/node_trace_e3_phishing_executable_0413.csv",
-            "pidsmaker/node_trace_e3_pine_0413.csv",
-        ],
-        FL: ["flash/trace.json"],
-        WW: ["wwtawwtal/trace_labels.csv"],
-    },
-    "theia": {
-        PM: [
-            "pidsmaker/node_Firefox_Backdoor_Drakon_In_Memory.csv",
-            "pidsmaker/node_Browser_Extension_Drakon_Dropper.csv",
-        ],
-        FL: ["flash/theia.json"],
-        WW: ["wwtawwtal/theia_labels.csv", ] # "wwtawwtal/theia_edge_labels.csv"],
-    },
-    "fivedirections": {
-        PM: [
-            "pidsmaker/node_fivedirections_e3_browser_0412.csv",
-            "pidsmaker/node_fivedirections_e3_excel_0409.csv",
-            "pidsmaker/node_fivedirections_e3_firefox_0411.csv",
-        ],
-        FL: ["flash/fivedirections.json"],
-        WW: [
-            "wwtawwtal/fivedirections_labels.csv",
-            # "wwtawwtal/fivedirections_edge_labels.csv",
-        ],
-    },
-    "clearscope": {
-        PM: [
-            "pidsmaker/node_clearscope_e3_firefox_0411.csv",
-            "pidsmaker/node_clearscope_e3_firefox_0412.csv",
-        ],
-    },
-}
 
-_E5_LABELS: Dict[str, Dict[str, list[str]]] = {
-    "cadets": {
-        PM: [
-            "pidsmaker/node_Nginx_Drakon_APT.csv",
-            "pidsmaker/node_Nginx_Drakon_APT_17.csv",
-        ],
-    },
-    "trace": {
-        PM: ["pidsmaker/node_Trace_Firefox_Drakon.csv"],
-    },
-    "theia": {
-        PM: ["pidsmaker/node_THEIA_1_Firefox_Drakon_APT_BinFmt_Elevate_Inject.csv"],
-    },
-    "fivedirections": {
-        PM: [
-            "pidsmaker/node_fivedirections_e5_bits_0515.csv",
-            "pidsmaker/node_fivedirections_e5_copykatz_0509.csv",
-            "pidsmaker/node_fivedirections_e5_dns_0517.csv",
-            "pidsmaker/node_fivedirections_e5_drakon_0517.csv",
-        ],
-    },
-    "clearscope": {
-        PM: [
-            "pidsmaker/node_clearscope_e5_appstarter_0515.csv",
-            "pidsmaker/node_clearscope_e5_firefox_0517.csv",
-            "pidsmaker/node_clearscope_e5_lockwatch_0517.csv",
-            "pidsmaker/node_clearscope_e5_tester_0517.csv",
-        ],
-    },
-    "marple": {},  # no published labels
-}
+def _build_attack_windows() -> List[AttackWindow]:
+    out: List[AttackWindow] = []
+    for dataset, subdataset, host, reg in _HOST_REGISTRIES:
+        for (start_edt, end_edt), entry in reg.items():
+            labels = {
+                src: tuple(paths)
+                for src, paths in entry.get("labels", {}).items()
+            }
+            out.append(AttackWindow(
+                dataset=dataset,
+                subdataset=subdataset,
+                host=host,
+                start_edt=start_edt,
+                end_edt=end_edt,
+                report_sec=entry.get("report_sec", ""),
+                descrpt=entry.get("descrpt", ""),
+                tactics=tuple(entry.get("tactics", [])),
+                labels=labels,
+            ))
+    return out
 
-# OpTC subdatasets get bullish set: per-host PIDSMaker files plus Flash and Revisiting OpTC label sets
-_OPTC_LABELS_ALL: Dict[str, list[str]] = {
-    PM: [
-        "pidsmaker/node_h051_0925.csv",
-        "pidsmaker/node_h201_0923.csv",
-        "pidsmaker/node_h501_0924.csv",
-    ],
-    FL: ["flash/optc.txt"],
-    RV: ["revisiting_optc/malicious.json"],
-}
+
+ATTACK_WINDOWS: List[AttackWindow] = _build_attack_windows()
+
+def _label_files_union(*regs: dict) -> Dict[str, List[str]]:
+    """Union per-window labels (across any number of per-host regs) into {source: [rel_path]}."""
+    out: Dict[str, List[str]] = {}
+    for reg in regs:
+        for entry in reg.values():
+            for src, paths in entry.get("labels", {}).items():
+                bucket = out.setdefault(src, [])
+                for p in paths:
+                    if p not in bucket:
+                        bucket.append(p)
+    return out
 
 # (dataset, subdataset) -> {"windows": {...}, "label_files": {...}}
 ATTACK_DATA: Dict[Tuple[str, str], dict] = {
     ("e3", "cadets"): {
         "windows": _merge(e3_cadets_host),
-        "label_files": _E3_LABELS["cadets"],
+        "label_files": _label_files_union(e3_cadets_host),
     },
     ("e3", "trace"): {
         "windows": _merge(e3_trace_host),
-        "label_files": _E3_LABELS["trace"],
+        "label_files": _label_files_union(e3_trace_host),
     },
     ("e3", "theia"): {
         "windows": _merge(e3_theia_host),
-        "label_files": _E3_LABELS["theia"],
+        "label_files": _label_files_union(e3_theia_host),
     },
     ("e3", "fivedirections"): {
         "windows": _merge(e3_fivedirections_host),
-        "label_files": _E3_LABELS["fivedirections"],
+        "label_files": _label_files_union(e3_fivedirections_host),
     },
     ("e3", "clearscope"): {
         "windows": _merge(e3_clearscope_host),
-        "label_files": _E3_LABELS["clearscope"],
+        "label_files": _label_files_union(e3_clearscope_host),
     },
     ("e5", "cadets"): {
         "windows": _merge(e5_cadets_1, e5_cadets_2),
-        "label_files": _E5_LABELS["cadets"],
+        "label_files": _label_files_union(e5_cadets_1, e5_cadets_2),
     },
     ("e5", "trace"): {
         "windows": _merge(e5_trace_1, e5_trace_2),
-        "label_files": _E5_LABELS["trace"],
+        "label_files": _label_files_union(e5_trace_1, e5_trace_2),
     },
     ("e5", "theia"): {
         "windows": _merge(e5_theia_1),
-        "label_files": _E5_LABELS["theia"],
+        "label_files": _label_files_union(e5_theia_1),
     },
     ("e5", "fivedirections"): {
         "windows": _merge(e5_fivedirections_1, e5_fivedirections_2, e5_fivedirections_3),
-        "label_files": _E5_LABELS["fivedirections"],
+        "label_files": _label_files_union(e5_fivedirections_1, e5_fivedirections_2, e5_fivedirections_3),
     },
     ("e5", "clearscope"): {
         "windows": _merge(e5_clearscope_1, e5_clearscope_2),
-        "label_files": _E5_LABELS["clearscope"],
+        "label_files": _label_files_union(e5_clearscope_1, e5_clearscope_2),
     },
     ("e5", "marple"): {
         "windows": _merge(e5_marple_1),
-        "label_files": _E5_LABELS["marple"],
+        "label_files": _label_files_union(e5_marple_1),
     },
     ("optc", "aia_201_225"): {
         "windows": _merge(optc_sysclient0201),
-        "label_files": _OPTC_LABELS_ALL,
+        "label_files": _label_files_union(optc_sysclient0201),
     },
     ("optc", "aia_501_525"): {
         "windows": _merge(optc_sysclient0501),
-        "label_files": _OPTC_LABELS_ALL,
+        "label_files": _label_files_union(optc_sysclient0501),
     },
     ("optc", "aia_951_975"): {
         "windows": _merge(optc_sysclient0974),
-        "label_files": _OPTC_LABELS_ALL,
+        "label_files": _label_files_union(optc_sysclient0974),
     },
     ("optc", "aia_51_75"): {
         "windows": _merge(optc_sysclient0051),
-        "label_files": _OPTC_LABELS_ALL,
+        "label_files": _label_files_union(optc_sysclient0051),
     },
 }
 
