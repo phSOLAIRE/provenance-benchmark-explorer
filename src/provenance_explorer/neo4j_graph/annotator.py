@@ -42,7 +42,7 @@ def load_pidsmaker(path: Path) -> Tuple[Set[str], Set[str]]:
             if not line:
                 continue
             # UUID is everything before the first comma
-            uuid = line.split(",", 1)[0].strip()
+            uuid = line.split(",", 1)[0].strip().upper()
             if uuid:
                 node_uuids.add(uuid)
     logger.debug("PIDSMaker %s: %d node UUIDs", path.name, len(node_uuids))
@@ -59,14 +59,14 @@ def load_flash_json(path: Path) -> Tuple[Set[str], Set[str]]:
         # Simple list of UUIDs
         for item in data:
             if isinstance(item, str) and item.strip():
-                node_uuids.add(item.strip())
+                node_uuids.add(item.strip().upper())
     elif isinstance(data, dict):
         # Dict with lists of UUIDs per attack chain
         for key, val in data.items():
             if isinstance(val, list):
                 for item in val:
                     if isinstance(item, str) and item.strip():
-                        node_uuids.add(item.strip())
+                        node_uuids.add(item.strip().upper())
 
     logger.debug("Flash JSON %s: %d node UUIDs", path.name, len(node_uuids))
     return node_uuids, set()
@@ -77,7 +77,7 @@ def load_flash_txt(path: Path) -> Tuple[Set[str], Set[str]]:
     node_uuids: Set[str] = set()
     with open(path, "r", encoding="utf-8") as f:
         for line in f:
-            uuid = line.strip()
+            uuid = line.strip().upper()
             if uuid:
                 node_uuids.add(uuid)
     logger.debug("Flash TXT %s: %d node UUIDs", path.name, len(node_uuids))
@@ -92,7 +92,7 @@ def load_wwtawwtal_nodes(path: Path) -> Tuple[Set[str], Set[str]]:
         for row in reader:
             # Strip keys in case of residual whitespace
             cleaned = {k.strip(): v.strip() for k, v in row.items()}
-            uuid = cleaned.get("uuid", "")
+            uuid = cleaned.get("uuid", "").upper()
             if uuid:
                 node_uuids.add(uuid)
     logger.debug("WWTAWWTAL nodes %s: %d node UUIDs", path.name, len(node_uuids))
@@ -107,8 +107,8 @@ def load_wwtawwtal_edges(path: Path) -> Tuple[Set[str], Set[str]]:
         reader = csv.DictReader(f, skipinitialspace=True)
         for row in reader:
             cleaned = {k.strip(): v.strip() for k, v in row.items()}
-            v_uuid = cleaned.get("vertex_uuid", "")
-            e_uuid = cleaned.get("edge_uuid", "")
+            v_uuid = cleaned.get("vertex_uuid", "").upper()
+            e_uuid = cleaned.get("edge_uuid", "").upper()
             if v_uuid:
                 node_uuids.add(v_uuid)
             if e_uuid:
@@ -119,31 +119,25 @@ def load_wwtawwtal_edges(path: Path) -> Tuple[Set[str], Set[str]]:
 
 
 def load_revisiting_optc(path: Path) -> Tuple[Set[str], Set[str]]:
-    """edge+node uuids for optc """
+    """edge+node uuids for optc; file is NDJSON (one event per line)"""
     node_uuids: Set[str] = set()
     edge_uuids: Set[str] = set()
     with open(path, "r", encoding="utf-8") as f:
-        data = json.load(f)
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            record = json.loads(line)
+            if not isinstance(record, dict):
+                continue
+            eid = record.get("id", "").strip().upper()
+            if eid:
+                edge_uuids.add(eid)
 
-    records = data if isinstance(data, list) else data.values() if isinstance(data, dict) else []
-    flat_records = []
-    for item in records:
-        if isinstance(item, dict):
-            flat_records.append(item)
-        elif isinstance(item, list):
-            flat_records.extend(item)
-
-    for record in flat_records:
-        if not isinstance(record, dict):
-            continue
-        eid = record.get("id", "").strip()
-        if eid:
-            edge_uuids.add(eid)
-
-        for key in ("actorID", "objectID"):
-            nid = record.get(key, "")
-            if isinstance(nid, str) and nid.strip():
-                node_uuids.add(nid.strip())
+            for key in ("actorID", "objectID"):
+                nid = record.get(key, "")
+                if isinstance(nid, str) and nid.strip():
+                    node_uuids.add(nid.strip().upper())
 
     logger.debug("Revisiting OpTC %s: %d node UUIDs, %d edge UUIDs",
                  path.name, len(node_uuids), len(edge_uuids))
