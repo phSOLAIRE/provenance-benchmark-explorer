@@ -120,7 +120,7 @@ def report_new_vs_existing(
     existing = {p.name for p in manager.instances_root.glob("*") if p.is_dir()}
 
     logger.info("=" * 80)
-    logger.info("new and existing instances under:", len(slices))
+    logger.info("Derived %d slice(s); diffing against existing instances under:", len(slices))
     logger.info("  %s", manager.instances_root)
     logger.info("=" * 80)
 
