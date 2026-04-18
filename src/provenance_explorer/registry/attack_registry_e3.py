@@ -19,6 +19,10 @@ e3_cadets_host = {
             "Discovery", # nrinfo, ps, netrecon (!) module
             "Command and Control", # loaderDrakon console, nrtcp to 61.167.39.128:80
         ],
+        "labels": {
+            "pidsmaker": ["pidsmaker/node_Nginx_Backdoor_06.csv"],
+            "wwtawwtal": ["wwtawwtal/cadets_labels.csv"],
+        },
     },
 
     ("2018-04-11 15:08:00", "2018-04-11 15:15:00"): {
@@ -32,6 +36,10 @@ e3_cadets_host = {
             "Command and Control", # loaderDrakon shell
             # No Privilege Escalation in this window (no elevate before crash)
         ],
+        "labels": {
+            "pidsmaker": ["pidsmaker/node_Nginx_Backdoor_11.csv"],
+            "wwtawwtal": ["wwtawwtal/cadets_labels.csv"],
+        },
     },
 
     ("2018-04-12 14:00:00", "2018-04-12 14:38:00"): {
@@ -45,6 +53,10 @@ e3_cadets_host = {
             "Discovery", # micro APT portscan of 128.55.12.XX
             "Command and Control", # drakon XIM + micro APT sendmail
         ],
+        "labels": {
+            "pidsmaker": ["pidsmaker/node_Nginx_Backdoor_12.csv"],
+            "wwtawwtal": ["wwtawwtal/cadets_labels.csv"],
+        },
     },
 
     ("2018-04-13 09:04:00", "2018-04-13 09:16:00"): {
@@ -59,6 +71,11 @@ e3_cadets_host = {
             # "Discovery", # ps, whoami
             "Command and Control", # drakon pEja72mA connection
         ],
+        "labels": {
+            "pidsmaker": ["pidsmaker/node_Nginx_Backdoor_13.csv"],
+            "flash": ["flash/cadets.json"],
+            "wwtawwtal": ["wwtawwtal/cadets_labels.csv"],
+        },
     },
 }
 
@@ -76,6 +93,9 @@ e3_clearscope_host = {
             # "Exfiltration", # exfil over C2 channel; not collection, as this is not used downstream
             "Command and Control", # connections A1-A4
         ],
+        "labels": {
+            "pidsmaker": ["pidsmaker/node_clearscope_e3_firefox_0411.csv"],
+        },
     },
 
     ("2018-04-12 15:19:00", "2018-04-12 15:30:00"): {
@@ -88,6 +108,9 @@ e3_clearscope_host = {
             "Defense Evasion", # file names (libs, shared_lib, tmp18d17sn1); rm after use
             "Command and Control", # re-use of open A4 channel + new A5
         ],
+        "labels": {
+            "pidsmaker": ["pidsmaker/node_clearscope_e3_firefox_0412.csv"],
+        },
     },
 }
 
@@ -103,6 +126,11 @@ e3_fivedirections_host = {
             "Exfiltration", # >type (displays text) on document files
             "Command and Control", # powercat reverse shell to 208.75.117.6:80
         ],
+        "labels": {
+            "pidsmaker": ["pidsmaker/node_fivedirections_e3_excel_0409.csv"],
+            "flash": ["flash/fivedirections.json"],
+            "wwtawwtal": ["wwtawwtal/fivedirections_labels.csv"],
+        },
     },
 
     ("2018-04-11 10:00:00", "2018-04-11 10:40:00"): {
@@ -117,6 +145,10 @@ e3_fivedirections_host = {
             "Exfiltration", # getfile over OC2
             "Command and Control", # OC2 + netrecon channels
         ],
+        "labels": {
+            "pidsmaker": ["pidsmaker/node_fivedirections_e3_firefox_0411.csv"],
+            "wwtawwtal": ["wwtawwtal/fivedirections_labels.csv"],
+        },
     },
 
     ("2018-04-12 11:13:00", "2018-04-12 11:14:00"): {
@@ -126,6 +158,10 @@ e3_fivedirections_host = {
             "Initial Access", # browser extension load via www.allstate.com
             "Defense Evasion", # dropper wrote to C:\Program Files\Mozilla Firefox\add-on\hJauWl01
         ],
+        "labels": {
+            "pidsmaker": ["pidsmaker/node_fivedirections_e3_browser_0412.csv"],
+            "wwtawwtal": ["wwtawwtal/fivedirections_labels.csv"],
+        },
     },
 }
 
@@ -141,6 +177,14 @@ e3_theia_host = {
             "Discovery", # netrecon (nrtcp 7.149.198.40)
             "Command and Control", # multiple shells; L5 left open
         ],
+        "labels": {
+            "pidsmaker": [
+                "pidsmaker/node_Firefox_Backdoor_Drakon_In_Memory.csv",
+                "pidsmaker/node_Browser_Extension_Drakon_Dropper.csv",
+            ],
+            "flash": ["flash/theia.json"],
+            "wwtawwtal": ["wwtawwtal/theia_labels.csv"],
+        },
     },
 
     ("2018-04-12 12:44:00", "2018-04-12 13:26:00"): {
@@ -154,6 +198,13 @@ e3_theia_host = {
             "Discovery", # whoami, ps, micro APT portscan (!)
             "Command and Control", # gtcache drakon + micro APT C2
         ],
+        "labels": {
+            "pidsmaker": [
+                "pidsmaker/node_Firefox_Backdoor_Drakon_In_Memory.csv",
+                "pidsmaker/node_Browser_Extension_Drakon_Dropper.csv",
+            ],
+            "wwtawwtal": ["wwtawwtal/theia_labels.csv"],
+        },
     },
 }
 
@@ -168,6 +219,10 @@ e3_trace_host = {
             "Defense Evasion", # libdrakon staged at /var/log/xtmp; in-memory loader
             "Command and Control", # OC2 shells; L3 left open (later lost on OC2 crash)
         ],
+        "labels": {
+            "pidsmaker": ["pidsmaker/node_trace_e3_firefox_0410.csv"],
+            "wwtawwtal": ["wwtawwtal/trace_labels.csv"],
+        },
     },
 
     ("2018-04-12 13:36:00", "2018-04-12 13:37:00"): {
@@ -176,6 +231,9 @@ e3_trace_host = {
         "tactics": [
             "Initial Access", # browser extension exploit via allstate.com failed
         ],
+        "labels": {
+            "wwtawwtal": ["wwtawwtal/trace_labels.csv"],
+        },
     },
 
     ("2018-04-13 12:43:00", "2018-04-13 12:53:00"): {
@@ -189,6 +247,13 @@ e3_trace_host = {
             "Discovery", # micro APT portscan (no open ports found)
             "Command and Control", # micro APT + netrecon2 channels
         ],
+        "labels": {
+            "pidsmaker": [
+                "pidsmaker/node_trace_e3_pine_0413.csv",
+                "pidsmaker/node_trace_e3_phishing_executable_0413.csv",
+            ],
+            "wwtawwtal": ["wwtawwtal/trace_labels.csv"],
+        },
     },
 
     # actual start is more ~14:15
@@ -200,9 +265,17 @@ e3_trace_host = {
             "Execution", # user ran tcexec (failed, missing QT lib); micro apt ran via vulnerable Pine
             "Defense Evasion", # attachment-named-tcexec; pine auto-exec of attachment
             "Discovery", # micro APT portscan
-            "Exfiltration", # tcexfil (staged for exfil per sec 4.9.1); likely exfild, but not reported 
+            "Exfiltration", # tcexfil (staged for exfil per sec 4.9.1); likely exfild, but not reported
             "Command and Control", # micro APT C2 (162.66.239.75)
         ],
+        "labels": {
+            "pidsmaker": [
+                "pidsmaker/node_trace_e3_pine_0413.csv",
+                "pidsmaker/node_trace_e3_phishing_executable_0413.csv",
+            ],
+            "flash": ["flash/trace.json"],
+            "wwtawwtal": ["wwtawwtal/trace_labels.csv"],
+        },
     },
 }
 
