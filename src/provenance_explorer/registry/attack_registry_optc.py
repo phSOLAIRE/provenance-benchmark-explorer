@@ -27,6 +27,7 @@ optc_sysclient0201 = {
             "flash": ["flash/optc.txt"],
             "revisiting_optc": ["revisiting_optc/malicious.json"],
         },
+        "host_uuid":"SysClient0201.systemia.com"
     },
 }
 
@@ -73,6 +74,7 @@ optc_sysclient0501 = {
             "flash": ["flash/optc.txt"],
             "revisiting_optc": ["revisiting_optc/malicious.json"],
         },
+        "host_uuid":"SysClient0501.systemia.com"
     },
 }
 
@@ -90,6 +92,7 @@ optc_sysclient0974 = {
         "labels": {
             "revisiting_optc": ["revisiting_optc/malicious.json"],
         },
+        "host_uuid":"SysClient0974.systemia.com"
     },
 }
 
@@ -113,6 +116,7 @@ optc_sysclient0051 = {
             "flash": ["flash/optc.txt"],
             "revisiting_optc": ["revisiting_optc/malicious.json"],
         },
+        "host_uuid":"SysClient0051.systemia.com"
     },
 }
 
