@@ -23,6 +23,7 @@ e3_cadets_host = {
             "pidsmaker": ["pidsmaker/node_Nginx_Backdoor_06.csv"],
             "wwtawwtal": ["wwtawwtal/cadets_labels.csv"],
         },
+        "host_uuid" : "83C8ED1F-5045-DBCD-B39F-918F0DF4F851"
     },
 
     ("2018-04-11 15:08:00", "2018-04-11 15:15:00"): {
@@ -40,6 +41,7 @@ e3_cadets_host = {
             "pidsmaker": ["pidsmaker/node_Nginx_Backdoor_11.csv"],
             "wwtawwtal": ["wwtawwtal/cadets_labels.csv"],
         },
+        "host_uuid" : "83C8ED1F-5045-DBCD-B39F-918F0DF4F851"
     },
 
     ("2018-04-12 14:00:00", "2018-04-12 14:38:00"): {
@@ -57,6 +59,7 @@ e3_cadets_host = {
             "pidsmaker": ["pidsmaker/node_Nginx_Backdoor_12.csv"],
             "wwtawwtal": ["wwtawwtal/cadets_labels.csv"],
         },
+        "host_uuid" : "83C8ED1F-5045-DBCD-B39F-918F0DF4F851"
     },
 
     ("2018-04-13 09:04:00", "2018-04-13 09:16:00"): {
@@ -76,6 +79,7 @@ e3_cadets_host = {
             "flash": ["flash/cadets.json"],
             "wwtawwtal": ["wwtawwtal/cadets_labels.csv"],
         },
+        "host_uuid" : "83C8ED1F-5045-DBCD-B39F-918F0DF4F851"
     },
 }
 
@@ -96,6 +100,7 @@ e3_clearscope_host = {
         "labels": {
             "pidsmaker": ["pidsmaker/node_clearscope_e3_firefox_0411.csv"],
         },
+        "host_uuid":"5957F7A8-2EAB-D99C-459A-408A1F427D29"
     },
 
     ("2018-04-12 15:19:00", "2018-04-12 15:30:00"): {
@@ -111,6 +116,7 @@ e3_clearscope_host = {
         "labels": {
             "pidsmaker": ["pidsmaker/node_clearscope_e3_firefox_0412.csv"],
         },
+        "host_uuid":"5957F7A8-2EAB-D99C-459A-408A1F427D29"
     },
 }
 
@@ -131,6 +137,7 @@ e3_fivedirections_host = {
             "flash": ["flash/fivedirections.json"],
             "wwtawwtal": ["wwtawwtal/fivedirections_labels.csv"],
         },
+        "host_uuid":"D2842312-8456-4C8E-ADD6-E2295D0939D3"
     },
 
     ("2018-04-11 10:00:00", "2018-04-11 10:40:00"): {
@@ -149,6 +156,7 @@ e3_fivedirections_host = {
             "pidsmaker": ["pidsmaker/node_fivedirections_e3_firefox_0411.csv"],
             "wwtawwtal": ["wwtawwtal/fivedirections_labels.csv"],
         },
+        "host_uuid":"D2842312-8456-4C8E-ADD6-E2295D0939D3"
     },
 
     ("2018-04-12 11:13:00", "2018-04-12 11:14:00"): {
@@ -162,6 +170,7 @@ e3_fivedirections_host = {
             "pidsmaker": ["pidsmaker/node_fivedirections_e3_browser_0412.csv"],
             "wwtawwtal": ["wwtawwtal/fivedirections_labels.csv"],
         },
+        "host_uuid":"D2842312-8456-4C8E-ADD6-E2295D0939D3"
     },
 }
 
@@ -185,6 +194,7 @@ e3_theia_host = {
             "flash": ["flash/theia.json"],
             "wwtawwtal": ["wwtawwtal/theia_labels.csv"],
         },
+        "host_uuid":"0A00063C-5254-00F0-0D60-000000000070"
     },
 
     ("2018-04-12 12:44:00", "2018-04-12 13:26:00"): {
@@ -205,6 +215,7 @@ e3_theia_host = {
             ],
             "wwtawwtal": ["wwtawwtal/theia_labels.csv"],
         },
+        "host_uuid":"0A00063C-5254-00F0-0D60-000000000070"
     },
 }
 
@@ -223,6 +234,7 @@ e3_trace_host = {
             "pidsmaker": ["pidsmaker/node_trace_e3_firefox_0410.csv"],
             "wwtawwtal": ["wwtawwtal/trace_labels.csv"],
         },
+        "host_uuid":"3120B2A9-057E-E4EB-4BB9-154983D2C063"
     },
 
     ("2018-04-12 13:36:00", "2018-04-12 13:37:00"): {
@@ -234,6 +246,7 @@ e3_trace_host = {
         "labels": {
             "wwtawwtal": ["wwtawwtal/trace_labels.csv"],
         },
+        "host_uuid":"3120B2A9-057E-E4EB-4BB9-154983D2C063"
     },
 
     ("2018-04-13 12:43:00", "2018-04-13 12:53:00"): {
@@ -254,6 +267,7 @@ e3_trace_host = {
             ],
             "wwtawwtal": ["wwtawwtal/trace_labels.csv"],
         },
+        "host_uuid":"E621F964-5A66-0F89-30E0-67ADB2A5EC28" # last bit has new host uuid
     },
 
     # actual start is more ~14:15
@@ -276,6 +290,7 @@ e3_trace_host = {
             "flash": ["flash/trace.json"],
             "wwtawwtal": ["wwtawwtal/trace_labels.csv"],
         },
+        "host_uuid":"E621F964-5A66-0F89-30E0-67ADB2A5EC28" 
     },
 }
 
