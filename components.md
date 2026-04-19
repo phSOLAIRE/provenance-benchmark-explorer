@@ -1,0 +1,91 @@
+# Provenance Benchmark Explorer Package
+
+## Download
+Under `src/provenance_explorer/download`, functions for downloading and extracting the data files and according labels are found: 
+- `/src/provenance_explorer/download/darpa_downloads.py` : download & conversion
+- `/src/provenance_explorer/download/darpa_label_downloads.py` : label downloads
+- `/src/provenance_explorer/download/gdrive.py` : gdrive interaction to enable massive downloads
+
+## Registry: 
+Under `src/provenance_explorer/registry` data structures containing necessary metadata when interacting with the files are contained. 
+- `./src/provenance_explorer/registry/attack_registry_e3.py` : attack slices in E3 Sub Datasets; as dict with {("<start_str>", "<end_str>"): {"description":"", "report_section":"", "tactics":[<tactic>, ...], "labels":{"<label_set>":"<relative_path>"}}}
+- `./src/provenance_explorer/registry/attack_registry_e5.py` : attack slices in E5 Sub Datasets; as dict as above
+- `./src/provenance_explorer/registry/attack_registry_optc.py` : attack slices in OpTC Dataset; as dict as above
+- `./src/provenance_explorer/registry/attack_data.py` : summary class for attack windows containing AttackWindow data class. 
+- `./src/provenance_explorer/registry/darpa_e3_registry.py` : metadata for interacting with the raw E3 files
+- `./src/provenance_explorer/registry/darpa_e5_registry.py` : metadata for interacting with the raw E5 files
+- `./src/provenance_explorer/registry/darpa_optc_registry.py` : metadata for interacting with the raw OpTC files
+- `./src/provenance_explorer/registry/registry_all.py` : Summary and helper Functions
+
+## Raw File Handling
+Under `src/provenance_explorer/raw_file_handling` all functions for interacting with the raw DARPA datasets live:
+- `./src/provenance_explorer/raw_file_handling/dataset_iterator.py` : The core piece for interacting with the raw files; an iterator taking in a timespan, a timestamp extractor, a parsing function and the corresponding dataset registry, to yield records from that timespan. Built with `make_dataset_iterator()`
+- `./src/provenance_explorer/raw_file_handling/file_annotations.py` : Metadata extraction function for the individual files; used to build the registries. 
+- `./src/provenance_explorer/raw_file_handling/parsing_helpers.py` : Functions that can be included for parsing log lines in the individual files. 
+
+## Common Record
+Under `src/provenance_explorer/common_record` all functions, schemas and objects for iterating through the data on a unified scheme are defined: 
+- `./src/provenance_explorer/common_record/common_record_iterator.py` : Core piece; with iterate_common_records(dataset, sub_dataset, drop_log, t_start, t_end) an iterator yielding unified records is defined, logging excluded lines to a DropLog. 
+- `./src/provenance_explorer/common_record/dispatch.py` : mapping logic from individual raw records to common record. 
+- `./src/provenance_explorer/common_record/drop_log.py` : object for logging dropped events and keeping statistics of iteration.
+- `./src/provenance_explorer/common_record/object_lookup.py` : necessary part for record validation; builds and returns data structures used in validating that e.g. a 'read' event actually connects something readable with a process. 
+- `./src/provenance_explorer/common_record/schema.py` : Enums and Dataclasses used throughout the sub-package. 
+
+## Neo4j Graph
+Under `src/provenance_explorer/neo4j_graph` functions and a schema for managing and creating apptainer neo4j (community edition) instances for time windows. 
+- `./src/provenance_explorer/neo4j_graph/cypher_templates.py` : query templates for graph construction; importantly also contains build_index_statements() for initializing the databases so they can be used quickly.
+- `./src/provenance_explorer/neo4j_graph/graph_builder.py` : orchestrates object lookup + common record + grpah ingester and the instance manager to build a graph for a timespan
+- `./src/provenance_explorer/neo4j_graph/ingestion.py` : manages accumulation and preparation of big cypher insertions
+- `./src/provenance_explorer/neo4j_graph/instance_manager.py` : manages paths, overlap and start/ stop of neo4j container and instance data directories; necessary because neo4j communuity doesnt allow multiple databases in one instance 
+- `./src/provenance_explorer/neo4j_graph/annotator.py` : annotate graph with (for now only node) labels from different label sources
+- `./src/provenance_explorer/neo4j_graph/schema.py` : the information flow direction adjusted common schema (i.e. Process-'reads'-File becomes File<-'isReadBy'-Process)
+- `./src/provenance_explorer/neo4j_graph/metrics.py` 
+
+## Plotting
+Under `src/provenance_explorer/plotting` a pipeline to be implemented by actual analysis logic is defined, to force users to keep plots consistent and re-runnable without expensive dataset iterations.
+- `./src/provenance_explorer/plotting/cache.py` : implements functions saving data retreived for a plot. 
+- `./src/provenance_explorer/plotting/style.mplstyle` : style sheet for consisttent plots
+- `./src/provenance_explorer/plotting/config.py` : functions for loading style sheet components
+- `./src/provenance_explorer/plotting/pipeline.py` : abstract class to be implemented by analyses runs 
+- `./src/provenance_explorer/plotting/template_plot.py` : template example
+
+## Analysis
+Under `src/provenance_explorer/analysis` live the implemented plots used throughout the assessment of the benchmark datasets. They are spread throughout the categories 'provenance capture', 'system scale', 'threat coverage' and 'activity realism'. 
+- `./src/provenance_explorer/analysis/activity_realism/activity_evolution/evolution_metrics.py` : evolution metric calculation, namely 'n_unique_normalized_cmdlines' and 'saturation_auc_unit'
+- `./src/provenance_explorer/analysis/activity_realism/activity_evolution/cmdline_normalization.py` : normalization functions used in evolution metrics
+- `./src/provenance_explorer/analysis/activity_realism/activity_evolution/evolution_plot.py` : plot for (unnormalized) saturation curve 
+- `./src/provenance_explorer/analysis/activity_realism/activity_regularity/mttkrp_helpers.py` : helpers for building a NTF decomposition of a temporal graph expressed as tensor of adjacency slices. 
+- `./src/provenance_explorer/analysis/activity_realism/activity_regularity/ntf_decomposition_plot.py` : plot showing density and a time aggreagted view of an NTF decomposition.
+- `./src/provenance_explorer/analysis/provenance_capture/correctness.py` : functions for computing '% gaps per host' and 'Timing errors per host', which depend on a full run of a volumetrics plot. 
+- `./src/provenance_explorer/analysis/provenance_capture/data_model_types_plot.py` : plot for sweep across all sub datasets of a dataset to determine relative occurences of different type+subtype combinations for the Data Models natively in the datasets (CDM18, CDM20, eCAR)
+- `./src/provenance_explorer/analysis/provenance_capture/dataset_timespans_plot.py` : plot for timespans covered by single files in the datasets.
+- `./src/provenance_explorer/analysis/provenance_capture/timestamp_disorder_plot.py` : bars for timing errors throughout the datasets. 
+- `./src/provenance_explorer/analysis/system_scale/event_per_host.py` : host-aware sweep through sub-datasets to get densities of events across timeline
+- `./src/provenance_explorer/analysis/system_scale/volumetrics.py` : metrics for events/s and information_flow_events/s 
+- `./src/provenance_explorer/analysis/system_scale/workload_variability.py` : discrete HMM estimation of workload regimes in a dataset, based on event frequencies. 
+
+# Connecting Scripts and Notebooks
+
+## Scripts
+
+Under `scripts/`, various pieces of the package are put together: 
+
+- `scripts/build_attack_neo4j_graphs.py` : run build & ingestion of neo4j instances for attack slices defined in src.registry.attack_data
+- `scripts/explore_graph.py` : utility script for firing up instances and annotating with labels
+- `scripts/run_download.py` : utility script for runnning download of whole datasets (e3, e5 or optc)
+- `scripts/get_e5_samples.py` : get samples of various object types and subtypes for E5 (CDM20)
+- `scripts/get_optc_samples.py` : same as above, but for OpTC (eCAR)
+- `scripts/get_information_flow_semantics.py` : get samples of which object types are connected by what event types for CDM 18 and CDM 20 datasets (E3 and E5)
+- `scripts/get_information_flow_semantics_ecar.py` : same as above, but for eCAR (OpTC)
+- `scripts/hpc_monitoring/* `: scripts for monitoring a HPC login node to get data for comparing the datasets to production data
+- `scripts/slurm/*` submit scripts for long running actions like building a graph or calculating an expensive plot
+
+## Notebooks
+
+Under `notebooks/`, analysis and API components are connected to gain insight or demonstrate how the repository works.
+- `notebooks/activity_regularity_demo.ipynb` : script showing the concept of the NTF analysis on a sample tensor with synthetic structures
+`notebooks/demo/common_record_tools_demo.ipynb` : demo of common record iterator
+`notebooks/demo/raw_file_handling_demo.ipynb` : demo of raw record iterator and other raw file interactions
+- `notebooks/per_host_metrics.ipynb` : notebook combining various metric into a big dataset|sub_dataset|host|{provenance capture metrics}|{system scale metrics}|{activity realism metrics}|{attack coverage metrics}
+- `notebooks/secondary_plots.ipynb` : plots derived data from big data sweep plots found in `src/analysis/`
+- `notebooks/thesis_plots.ipynb` : plots that are derived and e.g. miss titles or are more specific as they are included in the accompanying thesis
