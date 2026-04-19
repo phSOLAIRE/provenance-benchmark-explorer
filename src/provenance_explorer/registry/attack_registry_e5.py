@@ -7,7 +7,7 @@
 # )
 
 # ta1-cadets-1: 128.55.12.51
-# // ta1-cadets-3: 128.55.12.106 only used for out-of-hours testing on 05-15
+# // ta1-cadets-3: 128.55.12.106 only used for out-of-hours testing on 05-15; has uuid: CB02303B-654E-11E9-A80C-6C2B597E484C
 e5_cadets_1 = {
     ("2019-05-10 10:44:00", "2019-05-10 10:49:00"): {
         "descrpt": "SSH login with stolen creds (see Nmap campaign §5.2); /home/admin/passwd exfil via SCP",
@@ -20,6 +20,7 @@ e5_cadets_1 = {
         "labels": {
             "pidsmaker": ["pidsmaker/node_Nginx_Drakon_APT.csv"],
         },
+        "host_uuid":"A3702F4C-5A0C-11E9-B8B9-D4AE52C1DBD3"
     },
     ("2019-05-10 13:44:00", "2019-05-10 13:46:00"): {
         "descrpt": "pivot out to THEIA-1",
@@ -30,6 +31,7 @@ e5_cadets_1 = {
         "labels": {
             "pidsmaker": ["pidsmaker/node_Nginx_Drakon_APT.csv"],
         },
+        "host_uuid":"A3702F4C-5A0C-11E9-B8B9-D4AE52C1DBD3"
     },
     ("2019-05-16 09:33:00", "2019-05-16 10:11:00"): {
         "descrpt": "Nginx Drakon APT attempt; exploit traffic to cadets-1 failed at 09:33 but an F1 callback at 09:59 self-reports as ta1-cadets-1",
@@ -46,6 +48,7 @@ e5_cadets_1 = {
         "labels": {
             "pidsmaker": ["pidsmaker/node_Nginx_Drakon_APT.csv"],
         },
+        "host_uuid":"A3702F4C-5A0C-11E9-B8B9-D4AE52C1DBD3"
     },
     ("2019-05-17 10:16:00", "2019-05-17 10:19:00"): {
         "descrpt": "Nginx Drakon APT initial tries; C2 callbacks landed on wrong listener port (rediscovered at 13:30)",
@@ -59,6 +62,7 @@ e5_cadets_1 = {
         "labels": {
             "pidsmaker": ["pidsmaker/node_Nginx_Drakon_APT_17.csv"],
         },
+        "host_uuid":"A3702F4C-5A0C-11E9-B8B9-D4AE52C1DBD3"
     },
     ("2019-05-17 10:47:00", "2019-05-17 11:31:00"): {
         "descrpt": "Nginx Drakon APT re-run via ta51-pivot-2 OC2; /etc/passwd exfil",
@@ -76,6 +80,7 @@ e5_cadets_1 = {
         "labels": {
             "pidsmaker": ["pidsmaker/node_Nginx_Drakon_APT_17.csv"],
         },
+        "host_uuid":"A3702F4C-5A0C-11E9-B8B9-D4AE52C1DBD3"
     },
     ("2019-05-17 13:30:00", "2019-05-17 14:10:00"): {
         "descrpt": "Re-attached to the C2 sessions from 10:17/10:19 (port 8888); whoami/hostname, then quit",
@@ -87,6 +92,7 @@ e5_cadets_1 = {
         "labels": {
             "pidsmaker": ["pidsmaker/node_Nginx_Drakon_APT_17.csv"],
         },
+        "host_uuid":"A3702F4C-5A0C-11E9-B8B9-D4AE52C1DBD3"
     },
 }
 
@@ -120,6 +126,7 @@ e5_cadets_2 = {
         "labels": {
             "pidsmaker": ["pidsmaker/node_Nginx_Drakon_APT_17.csv"],
         },
+        "host_uuid":"3A541941-5B04-11E9-B2DB-D4AE52C1DBD3"
     },
 }
 
@@ -133,6 +140,7 @@ e5_clearscope_1 = {
             "Initial Access",   # ATTEMPTED only;  scp + adb install of instrumented Barephone APK
         ],
         "labels": {},
+        "host_uuid":"860178F8-0FE9-66CC-8EE2-F6BBD1A59DAB"
     },
     ("2019-05-17 14:27:00", "2019-05-17 14:33:00"): {
         "descrpt": "MyApp/AppStarter Micro APT prep BinFmt-Elevate driver loaded, C2 FAILED",
@@ -152,6 +160,7 @@ e5_clearscope_1 = {
                 "pidsmaker/node_clearscope_e5_tester_0517.csv",
             ],
         },
+        "host_uuid":"860178F8-0FE9-66CC-8EE2-F6BBD1A59DAB"
     },
 
     ("2019-05-17 16:20:00", "2019-05-17 16:27:00"): {
@@ -175,6 +184,7 @@ e5_clearscope_1 = {
                 "pidsmaker/node_clearscope_e5_tester_0517.csv",
             ],
         },
+        "host_uuid":"860178F8-0FE9-66CC-8EE2-F6BBD1A59DAB"
     },
 }
 
@@ -192,6 +202,7 @@ e5_clearscope_2 = {
         "labels": {
             "pidsmaker": ["pidsmaker/node_clearscope_e5_appstarter_0515.csv"],
         },
+        "host_uuid":"54FF20FC-635E-6455-F04F-EA4FA27EBC1E"
     },
 
     ("2019-05-15 15:39:00", "2019-05-15 16:18:00"): {
@@ -212,6 +223,7 @@ e5_clearscope_2 = {
         "labels": {
             "pidsmaker": ["pidsmaker/node_clearscope_e5_appstarter_0515.csv"],
         },
+        "host_uuid":"54FF20FC-635E-6455-F04F-EA4FA27EBC1E"
     },
 
     ("2019-05-17 11:50:00", "2019-05-17 11:58:00"): {
@@ -233,6 +245,7 @@ e5_clearscope_2 = {
                 "pidsmaker/node_clearscope_e5_tester_0517.csv",
             ],
         },
+        "host_uuid":"54FF20FC-635E-6455-F04F-EA4FA27EBC1E"
     },
 
     ("2019-05-17 14:34:00", "2019-05-17 14:36:00"): {
@@ -294,6 +307,7 @@ e5_fivedirections_1 = {
         ],
         # NOTE 14:24 is when attacker first drove the BITS attack; 11:03 is reported as start in the section, but this is benign setup
         "labels": {},
+        "host_uuid":"2AB88DCD-CBE6-41DF-AC69-9F6D6058E398",
     },
 
     ("2019-05-17 16:11:00", "2019-05-17 16:16:00"): {
@@ -315,6 +329,7 @@ e5_fivedirections_1 = {
                 "pidsmaker/node_fivedirections_e5_drakon_0517.csv",
             ],
         },
+        "host_uuid":"2AB88DCD-CBE6-41DF-AC69-9F6D6058E398"
     },
 }
 
@@ -338,6 +353,7 @@ e5_fivedirections_2 = {
         "labels": {
             "pidsmaker": ["pidsmaker/node_fivedirections_e5_copykatz_0509.csv"],
         },
+        "host_uuid": "223CBBCE-1BC5-451E-9D2E-5B3A762F31C7"
     },
 
     ("2019-05-15 13:15:00", "2019-05-15 13:34:00"): {
@@ -357,6 +373,7 @@ e5_fivedirections_2 = {
         "labels": {
             "pidsmaker": ["pidsmaker/node_fivedirections_e5_bits_0515.csv"],
         },
+        "host_uuid": "223CBBCE-1BC5-451E-9D2E-5B3A762F31C7"
     },
 }
 
@@ -375,6 +392,7 @@ e5_fivedirections_3 = {
             "Command and Control", # ssh (?)
         ],
         "labels": {},
+        "host_uuid":"552FFA2E-711A-488F-A65C-52762800923B", # used until 05-14, therefore different from other one
     },
 
     ("2019-05-17 12:47:00", "2019-05-17 13:04:00"): {
@@ -397,6 +415,7 @@ e5_fivedirections_3 = {
                 "pidsmaker/node_fivedirections_e5_drakon_0517.csv",
             ],
         },
+        "host_uuid":"A8DB8613-F66E-4F0C-A19E-F43513BACC10",
     },
 }
 
@@ -414,6 +433,7 @@ e5_marple_1 = {
             # Privilege Escalation onyl attemped
         ],
         "labels": {},
+        "host_uuid": "00000000-0000-0000-0000-000000000000"
     },
 
     ("2019-05-17 13:01:00", "2019-05-17 13:29:00"): {
@@ -430,6 +450,7 @@ e5_marple_1 = {
             # Privilege Escalation only
         ],
         "labels": {},
+        "host_uuid": "00000000-0000-0000-0000-000000000000"
     },
 }
 
@@ -447,6 +468,7 @@ e5_theia_1 = {
         "labels": {
             "pidsmaker": ["pidsmaker/node_THEIA_1_Firefox_Drakon_APT_BinFmt_Elevate_Inject.csv"],
         },
+        "host_uuid":"81286EE1-D2EB-53D8-AEAB-DB2728F9FB0F"
     },
 
     ("2019-05-15 14:48:00", "2019-05-15 15:07:00"): {
@@ -464,6 +486,7 @@ e5_theia_1 = {
         "labels": {
             "pidsmaker": ["pidsmaker/node_THEIA_1_Firefox_Drakon_APT_BinFmt_Elevate_Inject.csv"],
         },
+        "host_uuid":"81286EE1-D2EB-53D8-AEAB-DB2728F9FB0F"
     },
 }
 
@@ -482,6 +505,7 @@ e5_trace_2 = {
         "labels": {
             "pidsmaker": ["pidsmaker/node_Trace_Firefox_Drakon.csv"],
         },
+        "host_uuid":"DF4AF963-C31C-DAFC-B5C6-D86F33322775"
     },
 
     ("2019-05-14 10:18:00", "2019-05-14 10:28:00"): {
@@ -499,6 +523,7 @@ e5_trace_2 = {
         "labels": {
             "pidsmaker": ["pidsmaker/node_Trace_Firefox_Drakon.csv"],
         },
+        "host_uuid":"DF4AF963-C31C-DAFC-B5C6-D86F33322775"
     },
 
     ("2019-05-17 13:39:00", "2019-05-17 13:43:00"): {
@@ -513,6 +538,7 @@ e5_trace_2 = {
         "labels": {
             "pidsmaker": ["pidsmaker/node_Trace_Firefox_Drakon.csv"],
         },
+        "host_uuid":"DF4AF963-C31C-DAFC-B5C6-D86F33322775"
     },
 
     # from report: We would consider all of this activity benign as no C2 connection ever happened
@@ -529,6 +555,7 @@ e5_trace_2 = {
         "labels": {
             "pidsmaker": ["pidsmaker/node_Trace_Firefox_Drakon.csv"],
         },
+        "host_uuid":"DF4AF963-C31C-DAFC-B5C6-D86F33322775"
     },
 }
 
@@ -547,5 +574,6 @@ e5_trace_1 = {
         "labels": {
             "pidsmaker": ["pidsmaker/node_Trace_Firefox_Drakon.csv"],
         },
+        "host_uuid":"7A665024-F3E3-3D4E-3A98-D9651E351DE4", # other uuid is never used
     },
 }
