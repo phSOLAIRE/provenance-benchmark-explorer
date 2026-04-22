@@ -126,6 +126,7 @@ class ArtifactCache(ABC):
 
     @staticmethod
     def _save_pkl(data: Any, path: Path) -> None:
+        path.parent.mkdir(parents=True, exist_ok=True)
         with open(path, "wb") as fh:
             pickle.dump(data, fh, protocol=pickle.HIGHEST_PROTOCOL)
 
