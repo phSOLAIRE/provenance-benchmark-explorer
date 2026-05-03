@@ -27,6 +27,8 @@ def _get_platform(ds: str, subds: str) -> str:
         return "windows"
     if subds in ("theia", "trace"):
         return "linux"
+    if ds == "hpc":
+        return "linux"
     raise
 
 # Cross-platform rules
@@ -251,4 +253,42 @@ def _normalize_linux(line: str) -> str:
     ):
         line = '<BINARY_GARBAGE>'
 
+    # # package version strings
+    # line = re.sub(r'_[a-zA-Z0-9.:~+-]+_(amd64|i386|all)\.d?deb', r'_<VERSION>.deb', line)
+
+    # # kernel version strings
+    # line = re.sub(r'\b\d+\.\d+\.\d+-\d+-generic[^\s]*', '<KERNEL_VER>', line)
+
+    # # Collapse packages from apt cache
+    # line = re.sub(r'((?:/var/cache/apt/archives//?\S+\s*){3,})', '/var/cache/apt/archives/<MULTIPLE_DEBS> ', line)
+
+    # # Collapse binaries
+    # line = re.sub(r'((?:/usr/lib/klibc/bin/\S+\s*){3,})', '/usr/lib/klibc/bin/<MULTIPLE_BINS> ', line)
+
+    # # Collapse root directory listings
+    # line = re.sub(r'(/bin /boot /data /debug /dev /etc /home.*)', '<ROOT_DIRS>', line)
+
+    # # Collapse X11 font paths
+    # line = re.sub(r'(-fp\s+)[/\w.,-]+', r'\1<FONT_PATHS>', line)
+
+    # # Collapse compiler macros
+    # line = re.sub(r'((?:-D\s*\w+(?:=[^\s]+)?\s*){4,})', '<MACROS> ', line)
+
+    # # Collapse multiple '-name X -prune -o' chains
+    # line = re.sub(r'((?:-name\s+\S+\s+-prune\s+-o\s*){3,})', '<FIND_PRUNE_CHAIN> ', line)
+
+    # # inline sed expressions while preserving the sed command itself
+    # line = re.sub(r'(sed\s+-e\s+)[^\n]{20,}', r'\1<SED_SCRIPT>', line)
+
+    # line = re.sub(
+    #     r'(stat\s+-c\s+%Y\s+/{1,2}var/lib/apt/{1,2}lists/{1,2})\S+', 
+    #     r'\1<APT_REPO_LIST>', 
+    #     line
+    # )
+
+    # line = re.sub(
+    #     r'(cp\s+-pL\s+/lib/.*?)\s+(/tmp/mkinitramfs_)[a-zA-Z0-9]+(/.*)',
+    #     r'cp -pL <LIB_OR_FW> \2<RAND>\3',
+    #     line
+    # )
     return line

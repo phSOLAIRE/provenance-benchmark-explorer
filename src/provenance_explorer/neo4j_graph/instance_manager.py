@@ -50,6 +50,44 @@ def instance_dir_name(dataset: str, sub_dataset: str, t_start_ns: int, t_end_ns:
     end = _ns_to_dirname_part(t_end_ns)
     return f"{dataset}_{sub_dataset}__{start}__{end}"
 
+
+def parse_instance_name(name: str) -> Optional["ParsedInstance"]:
+    """
+    Invert instance_dir_name: pull (dataset, sub_dataset, t_start_ns, t_end_ns) out
+    of an instance directory name. Returns None on malformed input.
+
+    sub_dataset may itself contain underscores (e.g. "aia_201_225"), so we split
+    on the "__" delimiter first.
+    """
+    from datetime import datetime, timezone
+
+    parts = name.split("__")
+    if len(parts) != 3:
+        return None
+    prefix, start_s, end_s = parts
+    if "_" not in prefix:
+        return None
+    dataset, sub_dataset = prefix.split("_", 1)
+    try:
+        start_dt = datetime.strptime(start_s, "%Y%m%dT%H%M%S").replace(tzinfo=timezone.utc)
+        end_dt = datetime.strptime(end_s, "%Y%m%dT%H%M%S").replace(tzinfo=timezone.utc)
+    except ValueError:
+        return None
+    return ParsedInstance(
+        dataset=dataset,
+        sub_dataset=sub_dataset,
+        t_start_ns=int(start_dt.timestamp() * 1_000_000_000),
+        t_end_ns=int(end_dt.timestamp() * 1_000_000_000),
+    )
+
+
+@dataclass(frozen=True)
+class ParsedInstance:
+    dataset: str
+    sub_dataset: str
+    t_start_ns: int
+    t_end_ns: int
+
 @dataclass
 class InstanceInfo:
     """instance directory data"""

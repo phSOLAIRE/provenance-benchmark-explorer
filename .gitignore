@@ -1,6 +1,7 @@
 ignored/
 *.xlsx
 *.tsv
+capture_io*
 *.csv
 *.parquet
 provenance-explorer-cache/
