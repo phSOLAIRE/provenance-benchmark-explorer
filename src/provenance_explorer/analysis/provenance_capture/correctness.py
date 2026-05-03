@@ -73,6 +73,10 @@ def extract_timing_errors(
             "timing_mean_error_s": stats["mean_error_s"],
             "timing_std_error_s": stats["std_error_s"],
             "timing_max_error_s": stats["max_error_s"],
+            "timing_median_error_s": stats["median_error_s"],
+            "timing_p25_error_s": stats["p25_error_s"],
+            "timing_p75_error_s": stats["p75_error_s"],
+            "timing_iqr_error_s": stats["iqr_error_s"],
         })
     return pd.DataFrame(rows)
 

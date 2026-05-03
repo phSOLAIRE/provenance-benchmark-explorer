@@ -6,11 +6,14 @@ The plot is a horizontal box-plot-ish chart clamped at 0.
 
 Since Kafka sequence numbers are perfectly ordered, the "true" record order is known.
 Any record whose timestamp is earlier than its predecessor's is a backward jump.
-We characterise these errors with three streaming statistics per host:
+We characterise these errors with per-host statistics:
 
     - (online) mean backward-jump magnitude
     - (online) std of backward-jump magnitude (calculated as welford online variance for numerical stability)
     - max backward-jump magnitude
+    - median, p25, p75 (IQR) — computed post-hoc from retained per-host error samples.
+      Because errors are bursty, mean/std are skewed; quantile stats describe the
+      "typical" error better for the thesis.
 
 Example usage in notebook:
 
@@ -99,6 +102,10 @@ def _collect_disorder_stats(
             "mean_error_s": float,
             "std_error_s": float,
             "max_error_s": float,
+            "median_error_s": float,
+            "p25_error_s": float,
+            "p75_error_s": float,
+            "iqr_error_s": float,
         }}
     """
     registry = get_subdataset_registry(dataset, sub_dataset)
@@ -109,6 +116,7 @@ def _collect_disorder_stats(
         registry=registry,
         parse_fn=parse_fn,
         ts_extractor=ts_fn,
+        test_run_seconds=100,
     )
 
     # Per-host streaming state
@@ -118,6 +126,7 @@ def _collect_disorder_stats(
     mean_error_ns: dict[str, float] = {}
     M2: dict[str, float] = {}
     max_error_ns: dict[str, int] = {}
+    errors_ns: dict[str, list[int]] = {}
 
     for ts_ns, pair in iterator:
         if pair is None:
@@ -134,6 +143,7 @@ def _collect_disorder_stats(
             mean_error_ns[host_id] = 0.0
             M2[host_id] = 0.0
             max_error_ns[host_id] = 0
+            errors_ns[host_id] = []
 
         n_total[host_id] += 1
 
@@ -146,6 +156,7 @@ def _collect_disorder_stats(
             M2[host_id] += delta * delta2
             if error > max_error_ns[host_id]:
                 max_error_ns[host_id] = error
+            errors_ns[host_id].append(error)
 
         last_ts[host_id] = ts_ns
 
@@ -155,6 +166,12 @@ def _collect_disorder_stats(
         nt = n_total[host_id]
         variance = M2[host_id] / ne if ne > 1 else 0.0
 
+        if ne > 0:
+            arr = np.asarray(errors_ns[host_id], dtype=np.int64)
+            p25_ns, median_ns, p75_ns = np.percentile(arr, [25, 50, 75])
+        else:
+            p25_ns = median_ns = p75_ns = 0.0
+
         results[host_id] = {
             "n_total": nt,
             "n_errors": ne,
@@ -162,6 +179,10 @@ def _collect_disorder_stats(
             "mean_error_s": mean_error_ns[host_id] / NS_PER_SEC,
             "std_error_s": variance**0.5 / NS_PER_SEC,
             "max_error_s": max_error_ns[host_id] / NS_PER_SEC,
+            "median_error_s": float(median_ns) / NS_PER_SEC,
+            "p25_error_s": float(p25_ns) / NS_PER_SEC,
+            "p75_error_s": float(p75_ns) / NS_PER_SEC,
+            "iqr_error_s": float(p75_ns - p25_ns) / NS_PER_SEC,
         }
         print(
             f"{dataset}/{sub_dataset}/{host_id[:16]}:"
@@ -169,6 +190,9 @@ def _collect_disorder_stats(
             f"  mean={results[host_id]['mean_error_s']:.4f}s"
             f"  std={results[host_id]['std_error_s']:.4f}s"
             f"  max={results[host_id]['max_error_s']:.4f}s"
+            f"  median={results[host_id]['median_error_s']:.4f}s"
+            f"  IQR={results[host_id]['iqr_error_s']:.4f}s"
+            f" [p25={results[host_id]['p25_error_s']:.4f}s, p75={results[host_id]['p75_error_s']:.4f}s]"
         )
 
     return results
