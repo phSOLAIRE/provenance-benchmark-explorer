@@ -1,4 +1,6 @@
+ignored/
 *.xlsx
+*.tsv
 *.csv
 *.parquet
 provenance-explorer-cache/
