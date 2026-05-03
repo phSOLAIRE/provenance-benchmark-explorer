@@ -246,6 +246,39 @@ class ObjectLookup:
         except (ValueError, AttributeError):
             return None
 
+    def filter_present(self, uuid_strs) -> set:
+        """Batched membership test; returns subset of uuid_strs present in lookup"""
+        present: set = set()
+        bytes_to_str: dict[bytes, str] = {}
+        for u in uuid_strs:
+            try:
+                b = uuid_to_bytes(u.upper())
+            except (ValueError, AttributeError):
+                continue
+            bytes_to_str[b] = u
+
+        if self._mode == "memory":
+            if not self._dict:
+                return present
+            for b, u in bytes_to_str.items():
+                if b in self._dict:
+                    present.add(u)
+            return present
+
+        if self._conn is None:
+            return present
+        blobs = list(bytes_to_str.keys())
+        CHUNK = 500
+        for i in range(0, len(blobs), CHUNK):
+            chunk = blobs[i:i + CHUNK]
+            placeholders = ",".join(["?"] * len(chunk))
+            q = f"SELECT uuid FROM lookup WHERE uuid IN ({placeholders})"
+            for row in self._conn.execute(q, chunk):
+                b = row[0]
+                if b in bytes_to_str:
+                    present.add(bytes_to_str[b])
+        return present
+
     def _sqlite_get(self, uuid_bytes: bytes) -> Optional[CompactInfo]:
         """SQLite lookup with LRU cache."""
         if self._lru is not None and uuid_bytes in self._lru:
