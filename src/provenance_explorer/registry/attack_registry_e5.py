@@ -14,11 +14,10 @@ e5_cadets_1 = {
         "report_sec": "5.2",
         "tactics": [
             "Initial Access", # Valid Accounts SSH login on ta1-cadets-1 after nmap sweep
-            "Collection", # passwd file from admin
-            "Exfiltration",# scp passwd -> ta51-pivot-1 (128.55.12.149)
+            # "Collection", # passwd file from admin
+            "Discovery",# scp passwd -> ta51-pivot-1 (128.55.12.149)
         ],
         "labels": {
-            "pidsmaker": ["pidsmaker/node_Nginx_Drakon_APT.csv"],
         },
         "host_uuid":"A3702F4C-5A0C-11E9-B8B9-D4AE52C1DBD3"
     },
@@ -29,7 +28,6 @@ e5_cadets_1 = {
             "Lateral Movement", # ssh admin@128.55.12.110 from inside cadets-1
         ],
         "labels": {
-            "pidsmaker": ["pidsmaker/node_Nginx_Drakon_APT.csv"],
         },
         "host_uuid":"A3702F4C-5A0C-11E9-B8B9-D4AE52C1DBD3"
     },
@@ -42,9 +40,6 @@ e5_cadets_1 = {
             "Defense Evasion", # in-memory, no disk artifact
             "Command and Control", # F1 to 4.21.51.250:80
         ],
-        # !!!! AMBIGUITY
-        # section narrative says cadets-2 was the successfully compromised host;
-        # however the F1 callbacks hostname output is "ta1-cadets-1" in the log (??)
         "labels": {
             "pidsmaker": ["pidsmaker/node_Nginx_Drakon_APT.csv"],
         },
@@ -52,7 +47,7 @@ e5_cadets_1 = {
     },
     ("2019-05-17 10:16:00", "2019-05-17 10:19:00"): {
         "descrpt": "Nginx Drakon APT initial tries; C2 callbacks landed on wrong listener port (rediscovered at 13:30)",
-        "report_sec": "10.4 / 10.4.4",
+        "report_sec": "10.4",
         "tactics": [
             "Initial Access", # malformed HTTP POST to 128.55.12.51:80
             "Execution", # loaderDrakon loaded in nginx memory (succeeded; callbacks F1/F2 on port 8888)
@@ -65,15 +60,13 @@ e5_cadets_1 = {
         "host_uuid":"A3702F4C-5A0C-11E9-B8B9-D4AE52C1DBD3"
     },
     ("2019-05-17 10:47:00", "2019-05-17 11:31:00"): {
-        "descrpt": "Nginx Drakon APT re-run via ta51-pivot-2 OC2; /etc/passwd exfil",
+        "descrpt": "Nginx Drakon APT re-run via ta51-pivot-2 OC2; /etc/passwd collection",
         "report_sec": "10.4",
         "tactics": [
             "Initial Access", # HTTP POST to 128.55.12.51:80
             "Execution", # loaderDrakon in-memory
             "Defense Evasion", # in-memory loader
-            "Credential Access", # cat /etc/passwd (account enum); cat /etc/shadow attempted failed (no root)
-            "Collection", # passwd contents
-            "Exfiltration", # passwd returned via C2
+            "Discovery", # cat /etc/passwd (account enum); cat /etc/shadow attempted failed (no root)
             "Command and Control", # F2 (src 128.55.12.51) -> 128.55.12.233:80
         ],
         # NOTE: subheader 10.4.3.4 is mis-labeled ta1-cadets-2 in the report
@@ -87,7 +80,7 @@ e5_cadets_1 = {
         "report_sec": "10.4.4",
         "tactics": [
             "Command and Control", # reconnected to F1/F2 on port 8888
-            "Discovery", # whoami, hostname
+            # "Discovery", # whoami, hostname
         ],
         "labels": {
             "pidsmaker": ["pidsmaker/node_Nginx_Drakon_APT_17.csv"],
@@ -105,10 +98,12 @@ e5_cadets_2 = {
             "Initial Access", # malformed HTTP POST to cadets-2 (09:32 failed, 09:34 + 09:36 retries)
             "Execution", # loaderDrakon shellcode written/served (251543 bytes served twice)
             "Defense Evasion", # in-memory loader
+            "Command and Control", # shellcode successfully staged for actual C2 capability
         ],
         "labels": {
             "pidsmaker": ["pidsmaker/node_Nginx_Drakon_APT.csv"],
         },
+        "host_uuid":"3A541941-5B04-11E9-B2DB-D4AE52C1DBD3"
     },
     ("2019-05-17 10:25:00", "2019-05-17 10:47:00"): {
         "descrpt": "Nginx Drakon APT; /etc/passwd exfil from cadets-2",
@@ -117,10 +112,10 @@ e5_cadets_2 = {
             "Initial Access", # malformed HTTP POST to 128.55.12.75:80 at 10:25
             "Execution", # loaderDrakon in-memory
             "Defense Evasion", # in-memory
-            "Discovery", # whoami, hostname, pwd, getpid (ls failed non-root)
-            "Credential Access", # cat /etc/passwd; cat shadow attempt failed
-            "Collection", # passwd contents
-            "Exfiltration", # passwd returned via C2
+            "Discovery", # whoami, hostname, pwd, getpid (ls failed non-root); passwd contents
+            # "Credential Access", # cat /etc/passwd; cat shadow attempt failed
+            # "Collection", # passwd contents
+            # "Exfiltration", # passwd returned via C2
             "Command and Control", # F1 (src 128.55.12.75) -> 128.55.12.233:80 via ta51-pivot-2
         ],
         "labels": {
@@ -155,9 +150,7 @@ e5_clearscope_1 = {
         # But the event log at 14:29-14:33 shows explicit ssh to admin@128.55.12.54, showing driver setup happened on both
         "labels": {
             "pidsmaker": [
-                "pidsmaker/node_clearscope_e5_firefox_0517.csv",
-                "pidsmaker/node_clearscope_e5_lockwatch_0517.csv",
-                "pidsmaker/node_clearscope_e5_tester_0517.csv",
+                "pidsmaker/node_clearscope_e5_appstarter_0515.csv",
             ],
         },
         "host_uuid":"860178F8-0FE9-66CC-8EE2-F6BBD1A59DAB"
@@ -179,30 +172,10 @@ e5_clearscope_1 = {
         ],
         "labels": {
             "pidsmaker": [
-                "pidsmaker/node_clearscope_e5_firefox_0517.csv",
-                "pidsmaker/node_clearscope_e5_lockwatch_0517.csv",
                 "pidsmaker/node_clearscope_e5_tester_0517.csv",
             ],
         },
         "host_uuid":"860178F8-0FE9-66CC-8EE2-F6BBD1A59DAB"
-    },
-}
-
-# clearscope_2 = ta1-clearscope-translate-test is 128.55.12.114 (test phone)
-e5_clearscope_2 = {
-    ("2019-05-15 14:35:00", "2019-05-15 14:42:00"): {
-        "descrpt": "Barephone Micro APT ch64 app crashed, no C2",
-        "report_sec": "8.5",
-        "substantive": False,# minor; APK ran but crashed before callback
-        "tactics": [
-            "Initial Access", # adb install -r barephone-instr.apk (after uninstall)
-            "Execution", # barephone app launched via ADB remote control
-            # nothing esle since app crashed at 14:42 before callback to 77.138.117.150:80.
-        ],
-        "labels": {
-            "pidsmaker": ["pidsmaker/node_clearscope_e5_appstarter_0515.csv"],
-        },
-        "host_uuid":"54FF20FC-635E-6455-F04F-EA4FA27EBC1E"
     },
 
     ("2019-05-15 15:39:00", "2019-05-15 16:18:00"): {
@@ -223,6 +196,23 @@ e5_clearscope_2 = {
         "labels": {
             "pidsmaker": ["pidsmaker/node_clearscope_e5_appstarter_0515.csv"],
         },
+        "host_uuid":"860178F8-0FE9-66CC-8EE2-F6BBD1A59DAB"
+    },
+}
+
+# clearscope_2 = ta1-clearscope-translate-test is 128.55.12.114 (test phone)
+e5_clearscope_2 = {
+    ("2019-05-15 14:35:00", "2019-05-15 14:42:00"): {
+        "descrpt": "Barephone Micro APT ch64 app crashed, no C2",
+        "report_sec": "8.5",
+        "substantive": False,# minor; APK ran but crashed before callback
+        "tactics": [
+            # "Initial Access", # (artificial) adb install -r barephone-instr.apk (after uninstall)
+            "Execution", # barephone app launched via ADB remote control
+            # nothing esle since app crashed at 14:42 before callback to 77.138.117.150:80.
+        ],
+        "labels": {
+        },
         "host_uuid":"54FF20FC-635E-6455-F04F-EA4FA27EBC1E"
     },
 
@@ -241,8 +231,8 @@ e5_clearscope_2 = {
         "labels": {
             "pidsmaker": [
                 "pidsmaker/node_clearscope_e5_firefox_0517.csv",
-                "pidsmaker/node_clearscope_e5_lockwatch_0517.csv",
-                "pidsmaker/node_clearscope_e5_tester_0517.csv",
+                # "pidsmaker/node_clearscope_e5_lockwatch_0517.csv",
+                # "pidsmaker/node_clearscope_e5_tester_0517.csv",
             ],
         },
         "host_uuid":"54FF20FC-635E-6455-F04F-EA4FA27EBC1E"
@@ -259,11 +249,12 @@ e5_clearscope_2 = {
         ],
         "labels": {
             "pidsmaker": [
-                "pidsmaker/node_clearscope_e5_firefox_0517.csv",
-                "pidsmaker/node_clearscope_e5_lockwatch_0517.csv",
-                "pidsmaker/node_clearscope_e5_tester_0517.csv",
+                # "pidsmaker/node_clearscope_e5_firefox_0517.csv",
+                # "pidsmaker/node_clearscope_e5_lockwatch_0517.csv",
+                # "pidsmaker/node_clearscope_e5_tester_0517.csv",
             ],
         },
+        "host_uuid":"54FF20FC-635E-6455-F04F-EA4FA27EBC1E"
     },
 
     ("2019-05-17 15:43:00", "2019-05-17 16:00:00"): {
@@ -282,11 +273,12 @@ e5_clearscope_2 = {
         ],
         "labels": {
             "pidsmaker": [
-                "pidsmaker/node_clearscope_e5_firefox_0517.csv",
+                # "pidsmaker/node_clearscope_e5_firefox_0517.csv",
                 "pidsmaker/node_clearscope_e5_lockwatch_0517.csv",
-                "pidsmaker/node_clearscope_e5_tester_0517.csv",
+                # "pidsmaker/node_clearscope_e5_tester_0517.csv",
             ],
         },
+        "host_uuid":"54FF20FC-635E-6455-F04F-EA4FA27EBC1E"
     },
 
 }
@@ -325,7 +317,6 @@ e5_fivedirections_1 = {
         # NOTE: report 10.6.3 describes filemon driver install as Benign Activity Setup
         "labels": {
             "pidsmaker": [
-                "pidsmaker/node_fivedirections_e5_dns_0517.csv",
                 "pidsmaker/node_fivedirections_e5_drakon_0517.csv",
             ],
         },
@@ -412,7 +403,6 @@ e5_fivedirections_3 = {
         "labels": {
             "pidsmaker": [
                 "pidsmaker/node_fivedirections_e5_dns_0517.csv",
-                "pidsmaker/node_fivedirections_e5_drakon_0517.csv",
             ],
         },
         "host_uuid":"A8DB8613-F66E-4F0C-A19E-F43513BACC10",
@@ -461,14 +451,11 @@ e5_theia_1 = {
         "report_sec": "5.2",
         "tactics": [
             "Lateral Movement", # inbound ssh from ta1-cadets-1
-            "Discovery", # ls, ifconfig, cat hosts (via FiveDirections pivot -
-            "Collection", # /home/admin/passwd read
-            "Exfiltration", # scp passwd admin@128.55.12.149
+            "Discovery", # ls, ifconfig, cat hosts, scp passwd admin@128.55.12.149
         ],
         "labels": {
-            "pidsmaker": ["pidsmaker/node_THEIA_1_Firefox_Drakon_APT_BinFmt_Elevate_Inject.csv"],
         },
-        "host_uuid":"81286EE1-D2EB-53D8-AEAB-DB2728F9FB0F"
+        "host_uuid":"37345038-89F2-5899-8FD2-B6D0844A7DBF"
     },
 
     ("2019-05-15 14:48:00", "2019-05-15 15:07:00"): {
@@ -486,7 +473,7 @@ e5_theia_1 = {
         "labels": {
             "pidsmaker": ["pidsmaker/node_THEIA_1_Firefox_Drakon_APT_BinFmt_Elevate_Inject.csv"],
         },
-        "host_uuid":"81286EE1-D2EB-53D8-AEAB-DB2728F9FB0F"
+        "host_uuid":"37345038-89F2-5899-8FD2-B6D0844A7DBF"
     },
 }
 
@@ -498,12 +485,12 @@ e5_trace_2 = {
         "tactics": [
             "Lateral Movement", # SSH from ta1-theia-target-1 (128.55.12.110) into trace-2 using stolen creds
             "Credential Access", # stolen creds used for SSH auth
-            "Collection", # passwd file present in home dir listed/accessed
-            "Exfiltration", # scp passwd admin@128.55.12.149:. — file exfiled to pivot host
+            "Collection", # passwd file present in home dir listed/accessed; scp passwd admin@128.55.12.149
+            # "Exfiltration", # scp passwd admin@128.55.12.149:. — file exfiled to pivot host
             "Discovery", # ifconfig network interface enumeration
         ],
         "labels": {
-            "pidsmaker": ["pidsmaker/node_Trace_Firefox_Drakon.csv"],
+            # "pidsmaker": ["pidsmaker/node_Trace_Firefox_Drakon.csv"],
         },
         "host_uuid":"DF4AF963-C31C-DAFC-B5C6-D86F33322775"
     },
@@ -516,7 +503,7 @@ e5_trace_2 = {
             "Execution", # loaderDrakon executed in-memory in Firefox process; stage1 shellcode
             "Privilege Escalation", # BinFmt-Elevate driver: "elevate test" -> uid:0 root
             "Defense Evasion", # in-memory APT (no file on disk); inject into sshd replaces process context
-            "Discovery", # ps (found sshd PID 16808); whoami; hostname; pwd; getpid
+            # "Discovery", # ps (found sshd PID 16808); whoami; hostname; pwd; getpid
             "Persistence", # inject into sshd PID 16808 — APT survives Firefox close; runs as root in sshd
             "Command and Control", # HTTP C2; L1 (Firefox) then L2 (sshd)
         ],
@@ -553,7 +540,7 @@ e5_trace_2 = {
             "Discovery",             # ls /lib (confirms file placement); ls ~ (home dir contents); env; netstat
         ],
         "labels": {
-            "pidsmaker": ["pidsmaker/node_Trace_Firefox_Drakon.csv"],
+            # "pidsmaker": ["pidsmaker/node_Trace_Firefox_Drakon.csv"],
         },
         "host_uuid":"DF4AF963-C31C-DAFC-B5C6-D86F33322775"
     },
@@ -572,7 +559,7 @@ e5_trace_1 = {
             "Discovery",# ls ~; env; netstat
         ],
         "labels": {
-            "pidsmaker": ["pidsmaker/node_Trace_Firefox_Drakon.csv"],
+            # "pidsmaker": ["pidsmaker/node_Trace_Firefox_Drakon.csv"],
         },
         "host_uuid":"7A665024-F3E3-3D4E-3A98-D9651E351DE4", # other uuid is never used
     },

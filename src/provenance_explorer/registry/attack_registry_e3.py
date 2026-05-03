@@ -21,7 +21,7 @@ e3_cadets_host = {
         ],
         "labels": {
             "pidsmaker": ["pidsmaker/node_Nginx_Backdoor_06.csv"],
-            "wwtawwtal": ["wwtawwtal/cadets_labels.csv"],
+            "wwtawwtal": ["wwtawwtal/cadets_labels.csv"], # cadets_3.1_success
         },
         "host_uuid" : "83C8ED1F-5045-DBCD-B39F-918F0DF4F851"
     },
@@ -39,7 +39,7 @@ e3_cadets_host = {
         ],
         "labels": {
             "pidsmaker": ["pidsmaker/node_Nginx_Backdoor_11.csv"],
-            "wwtawwtal": ["wwtawwtal/cadets_labels.csv"],
+            "wwtawwtal": ["wwtawwtal/cadets_labels.csv"], # cadets_3.8_fail
         },
         "host_uuid" : "83C8ED1F-5045-DBCD-B39F-918F0DF4F851"
     },
@@ -57,7 +57,7 @@ e3_cadets_host = {
         ],
         "labels": {
             "pidsmaker": ["pidsmaker/node_Nginx_Backdoor_12.csv"],
-            "wwtawwtal": ["wwtawwtal/cadets_labels.csv"],
+            "wwtawwtal": ["wwtawwtal/cadets_labels.csv"], # cadets_3.13_success
         },
         "host_uuid" : "83C8ED1F-5045-DBCD-B39F-918F0DF4F851"
     },
@@ -77,7 +77,7 @@ e3_cadets_host = {
         "labels": {
             "pidsmaker": ["pidsmaker/node_Nginx_Backdoor_13.csv"],
             "flash": ["flash/cadets.json"],
-            "wwtawwtal": ["wwtawwtal/cadets_labels.csv"],
+            "wwtawwtal": ["wwtawwtal/cadets_labels.csv"], # cadets_3.14_success
         },
         "host_uuid" : "83C8ED1F-5045-DBCD-B39F-918F0DF4F851"
     },
@@ -134,8 +134,8 @@ e3_fivedirections_host = {
         ],
         "labels": {
             "pidsmaker": ["pidsmaker/node_fivedirections_e3_excel_0409.csv"],
-            "flash": ["flash/fivedirections.json"],
-            "wwtawwtal": ["wwtawwtal/fivedirections_labels.csv"],
+            "flash": ["flash/fivedirections.json"], # inferred because isolated file in their repo covers this timespan
+            "wwtawwtal": ["wwtawwtal/fivedirections_labels.csv"], # fivedirections_4.4_powershell
         },
         "host_uuid":"D2842312-8456-4C8E-ADD6-E2295D0939D3"
     },
@@ -153,8 +153,8 @@ e3_fivedirections_host = {
             "Command and Control", # OC2 + netrecon channels
         ],
         "labels": {
-            "pidsmaker": ["pidsmaker/node_fivedirections_e3_firefox_0411.csv"],
-            "wwtawwtal": ["wwtawwtal/fivedirections_labels.csv"],
+            "pidsmaker": ["pidsmaker/node_fivedirections_e3_firefox_0411.csv"], 
+            "wwtawwtal": ["wwtawwtal/fivedirections_labels.csv"], # fivedirections_3.4_success
         },
         "host_uuid":"D2842312-8456-4C8E-ADD6-E2295D0939D3"
     },
@@ -168,7 +168,8 @@ e3_fivedirections_host = {
         ],
         "labels": {
             "pidsmaker": ["pidsmaker/node_fivedirections_e3_browser_0412.csv"],
-            "wwtawwtal": ["wwtawwtal/fivedirections_labels.csv"],
+            "wwtawwtal": ["wwtawwtal/fivedirections_labels.csv"], # fivedirections_3.10_fail_hJauWl01; 
+            # not sure what fivedirections_3.10_success_pass_mgr refers to as there is no successful pw manager exploit reported 
         },
         "host_uuid":"D2842312-8456-4C8E-ADD6-E2295D0939D3"
     },
@@ -189,7 +190,6 @@ e3_theia_host = {
         "labels": {
             "pidsmaker": [
                 "pidsmaker/node_Firefox_Backdoor_Drakon_In_Memory.csv",
-                "pidsmaker/node_Browser_Extension_Drakon_Dropper.csv",
             ],
             "flash": ["flash/theia.json"],
             "wwtawwtal": ["wwtawwtal/theia_labels.csv"],
@@ -210,7 +210,6 @@ e3_theia_host = {
         ],
         "labels": {
             "pidsmaker": [
-                "pidsmaker/node_Firefox_Backdoor_Drakon_In_Memory.csv",
                 "pidsmaker/node_Browser_Extension_Drakon_Dropper.csv",
             ],
             "wwtawwtal": ["wwtawwtal/theia_labels.csv"],
@@ -232,7 +231,7 @@ e3_trace_host = {
         ],
         "labels": {
             "pidsmaker": ["pidsmaker/node_trace_e3_firefox_0410.csv"],
-            "wwtawwtal": ["wwtawwtal/trace_labels.csv"],
+            "wwtawwtal": ["wwtawwtal/trace_labels.csv"], # trace_3.2_fail, trace_3.2_success
         },
         "host_uuid":"3120B2A9-057E-E4EB-4BB9-154983D2C063"
     },
@@ -244,7 +243,7 @@ e3_trace_host = {
             "Initial Access", # browser extension exploit via allstate.com failed
         ],
         "labels": {
-            "wwtawwtal": ["wwtawwtal/trace_labels.csv"],
+            "wwtawwtal": ["wwtawwtal/trace_labels.csv"], # trace_3.12_fail
         },
         "host_uuid":"3120B2A9-057E-E4EB-4BB9-154983D2C063"
     },
@@ -263,9 +262,8 @@ e3_trace_host = {
         "labels": {
             "pidsmaker": [
                 "pidsmaker/node_trace_e3_pine_0413.csv",
-                "pidsmaker/node_trace_e3_phishing_executable_0413.csv",
             ],
-            "wwtawwtal": ["wwtawwtal/trace_labels.csv"],
+            "wwtawwtal": ["wwtawwtal/trace_labels.csv"], # trace_3.15_success
         },
         "host_uuid":"E621F964-5A66-0F89-30E0-67ADB2A5EC28" # last bit has new host uuid
     },
@@ -284,11 +282,10 @@ e3_trace_host = {
         ],
         "labels": {
             "pidsmaker": [
-                "pidsmaker/node_trace_e3_pine_0413.csv",
                 "pidsmaker/node_trace_e3_phishing_executable_0413.csv",
             ],
-            "flash": ["flash/trace.json"],
-            "wwtawwtal": ["wwtawwtal/trace_labels.csv"],
+            "flash": ["flash/trace.json"], # inferred from time window by file used in their repo
+            "wwtawwtal": ["wwtawwtal/trace_labels.csv"], # trace_4.9_manual_tcexec_fail; trace_4.9_pine_tcexec_success
         },
         "host_uuid":"E621F964-5A66-0F89-30E0-67ADB2A5EC28" 
     },

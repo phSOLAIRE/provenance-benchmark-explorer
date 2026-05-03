@@ -18,7 +18,7 @@ Usage::
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from provenance_explorer.registry.attack_registry_e3 import (
     e3_cadets_host,
@@ -65,6 +65,9 @@ class AttackWindow:
     report_sec: str
     descrpt: str
     tactics: Tuple[str, ...]
+    # Host node uuid in the Neo4j graph; OpTC stores hostname strings here.
+    # None = registry gap; downstream host-scoped queries will skip such windows.
+    host_uuid: Optional[str] = None
     labels: Dict[str, Tuple[str, ...]] = field(default_factory=dict)
 
 
@@ -118,6 +121,7 @@ def _build_attack_windows() -> List[AttackWindow]:
                 report_sec=entry.get("report_sec", ""),
                 descrpt=entry.get("descrpt", ""),
                 tactics=tuple(entry.get("tactics", [])),
+                host_uuid=entry.get("host_uuid"),
                 labels=labels,
             ))
     return out
