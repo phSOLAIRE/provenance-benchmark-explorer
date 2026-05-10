@@ -55,10 +55,10 @@ DEFAULT_TOL = 1e-4
 DEFAULT_CC_THRESHOLD = 50.0
 
 # tag for which filter was used
-def _filters_tag(filters: Sequence[NodeFilter]) -> str:
+def _filters_tag(filters: Sequence[object]) -> str:
     if not filters:
         return "raw"
-    desc = "|".join(f.describe() for f in filters)
+    desc = "|".join(f.describe() for f in filters) # type: ignore
     h = hashlib.md5(desc.encode()).hexdigest()[:8]
     return h
 
@@ -98,7 +98,8 @@ class RegularityComponentsPlot(PlotPipeline):
         host_id = kwargs["host_id"]
         start_ns = kwargs["start_ns"]
         end_ns = kwargs["end_ns"]
-        filters: List[NodeFilter] = list(kwargs.get("filters", []))
+        filters: List[object] = list(kwargs.get("filters", []))
+        object_lookup = kwargs.get("object_lookup")
         bin_width_ns = kwargs.get("bin_width_ns", DEFAULT_BIN_WIDTH_NS)
         r_range = list(kwargs.get("r_range", DEFAULT_R_RANGE))
         n_inits = kwargs.get("n_inits", DEFAULT_N_INITS)
@@ -107,12 +108,13 @@ class RegularityComponentsPlot(PlotPipeline):
         cc_threshold = kwargs.get("cc_threshold", DEFAULT_CC_THRESHOLD)
         concentration_coarsening = kwargs.get("concentration_coarsening", CONCENTRATION_COARSENING)
 
-        print(f"\t[regularity] host={host_id}  filters={[f.describe() for f in filters]}")
+        print(f"\t[regularity] host={host_id}  filters={[f.describe() for f in filters]}") # type: ignore
         graphs = build_filtered_host_graphs(
             dataset=dataset, sub_dataset=sub_dataset,
             start_ns=start_ns, end_ns=end_ns,
             filters=filters, bin_width_ns=bin_width_ns,
             host_ids=[host_id],
+            object_lookup=object_lookup,
         )
         if host_id not in graphs:
             print(f"\t[regularity] host {host_id} produced no events in window")

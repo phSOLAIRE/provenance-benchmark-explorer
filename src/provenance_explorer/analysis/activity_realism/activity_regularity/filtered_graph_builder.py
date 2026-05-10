@@ -15,16 +15,20 @@ import pandas as pd
 
 from provenance_explorer.common_record import iterate_common_records, DropLog
 from provenance_explorer.common_record.schema import EdgeCategory
+from provenance_explorer.common_record.object_lookup import ObjectLookup
 
 from provenance_explorer.analysis.activity_realism.activity_regularity.mttkrp_helpers import (
     SparseTensor3,
     build_sparse_tensor,
 )
 from provenance_explorer.analysis.activity_realism.activity_regularity.graph_filters import (
+    EventTransform,
     NodeFilter,
     NodeStats,
     TopKFilter,
 )
+
+PipelineStep = object  # Union[NodeFilter, EventTransform]
 
 FLOW_DIRECTION = {
     EdgeCategory.FORK:    True,
@@ -81,8 +85,9 @@ def _collect_events(
 def _apply_pipeline(
     events: List[Tuple[int, str, str]],
     n_bins: int,
-    filters: Sequence[NodeFilter],
-) -> Tuple[List[Tuple[int, str, str]], pd.DataFrame]:
+    pipeline: Sequence[object],
+    object_lookup: Optional[ObjectLookup] = None,
+) -> Tuple[List[Tuple[int, str, str]], pd.DataFrame, List[Dict[str, object]]]:
     """
     Apply filters sequentially.
     """
@@ -91,25 +96,44 @@ def _apply_pipeline(
     n0_nodes = len(initial_stats.degree)
     n0_events = len(current)
 
-    rows = [{
+    rows: List[Dict[str, object]] = [{
         "stage": 0, "filter": "raw",
         "N": n0_nodes, "n_events": n0_events,
         "frac_nodes_kept": 1.0 if n0_nodes else 0.0,
         "frac_events_kept": 1.0 if n0_events else 0.0,
     }]
+    transform_extras: List[Dict[str, object]] = []
 
-    for i, f in enumerate(filters, start=1):
-        stats = NodeStats.from_events(current)
-        keep = f.keep(stats, n_bins)
-        current = [(b, s, d) for (b, s, d) in current if s in keep and d in keep]
-        rows.append({
-            "stage": i, "filter": f.describe(),
-            "N": len(keep), "n_events": len(current),
-            "frac_nodes_kept": (len(keep) / n0_nodes) if n0_nodes else 0.0,
-            "frac_events_kept": (len(current) / n0_events) if n0_events else 0.0,
-        })
+    for i, step in enumerate(pipeline, start=1):
+        if isinstance(step, EventTransform):
+            current, info = step.apply(current, n_bins, object_lookup)
+            stats_after = NodeStats.from_events(current)
+            row: Dict[str, object] = {
+                "stage": i, "filter": step.describe(),
+                "N": len(stats_after.degree), "n_events": len(current),
+                "frac_nodes_kept": (len(stats_after.degree) / n0_nodes) if n0_nodes else 0.0,
+                "frac_events_kept": (len(current) / n0_events) if n0_events else 0.0,
+            }
+            for k, v in info.items():
+                if k == "extra":
+                    continue
+                if isinstance(v, (int, float, str, bool)):
+                    row[k] = v
+            rows.append(row)
+            extras = info.get("extra", {}) if isinstance(info, dict) else {}
+            transform_extras.append({"step": i, "name": step.describe(), "extra": extras})
+        else:  # NodeFilter
+            stats = NodeStats.from_events(current)
+            keep = step.keep(stats, n_bins) # type: ignore
+            current = [(b, s, d) for (b, s, d) in current if s in keep and d in keep]
+            rows.append({
+                "stage": i, "filter": step.describe(), # type: ignore
+                "N": len(keep), "n_events": len(current),
+                "frac_nodes_kept": (len(keep) / n0_nodes) if n0_nodes else 0.0,
+                "frac_events_kept": (len(current) / n0_events) if n0_events else 0.0,
+            })
 
-    return current, pd.DataFrame(rows)
+    return current, pd.DataFrame(rows), transform_extras
 
 
 def build_filtered_host_graphs(
@@ -117,10 +141,11 @@ def build_filtered_host_graphs(
     sub_dataset: str,
     start_ns: int,
     end_ns: int,
-    filters: Sequence[NodeFilter],
+    filters: Sequence[object],
     bin_width_ns: int = DEFAULT_BIN_WIDTH_NS,
     host_ids: Optional[Sequence[str]] = None,
     max_nodes_fallback: Optional[int] = DEFAULT_MAX_NODES_FALLBACK,
+    object_lookup: Optional[ObjectLookup] = None,
 ) -> Dict[str, dict]:
     """
     Build per-host filtered information-flow tensors.
@@ -150,7 +175,9 @@ def build_filtered_host_graphs(
         n_events_orig = len(events)
         n_nodes_orig = len({u for _, s, d in events for u in (s, d)})
 
-        survivors, funnel = _apply_pipeline(events, n_bins, filters)
+        survivors, funnel, transform_extras = _apply_pipeline(
+            events, n_bins, filters, object_lookup=object_lookup,
+        )
 
         # hard-cap fallback
         fallback_triggered = False
@@ -212,9 +239,10 @@ def build_filtered_host_graphs(
                 "bin_width_ns": bin_width_ns,
                 "start_ns": start_ns,
                 "end_ns": end_ns,
-                "filters": [f.describe() for f in filters],
+                "filters": [f.describe() for f in filters], # type: ignore
                 "max_nodes_fallback": max_nodes_fallback,
                 "fallback_triggered": fallback_triggered,
+                "transform_extras": transform_extras,
             },
         }
         del events, survivors, indexed

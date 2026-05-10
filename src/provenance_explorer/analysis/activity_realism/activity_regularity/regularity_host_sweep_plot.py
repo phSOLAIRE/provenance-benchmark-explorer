@@ -271,6 +271,7 @@ class RegularityHostSweepPlot(PlotPipeline):
             "max_nodes_fallback", DEFAULT_MAX_NODES_FALLBACK,
         )
         host_allowlist: Optional[Sequence[str]] = kwargs.get("host_allowlist")
+        object_lookup = kwargs.get("object_lookup")  # required if any EventTransform is in `filters`
 
         # resume from partial cache if present
         existing: Dict[str, Any] = {"scope": None, "hosts": {}, "done": False}
@@ -305,6 +306,7 @@ class RegularityHostSweepPlot(PlotPipeline):
             filters=filters, bin_width_ns=bin_width_ns,
             host_ids=host_allowlist,
             max_nodes_fallback=max_nodes_fallback,
+            object_lookup=object_lookup,
         )
 
         host_ids = sorted(graphs.keys())
@@ -407,61 +409,46 @@ class RegularityHostSweepPlot(PlotPipeline):
         rows = [_condensed_row(p) for p in hosts.values()]
         df = pd.DataFrame(rows).sort_values("host_id").reset_index(drop=True)
 
-        # two panel
         pal = palette()
-        regime_order = ["periodic", "bursty", "aperiodic", "noise"]
-        regime_colors = {
-            "periodic": pal[0], "bursty": pal[2],
-            "aperiodic": pal[3], "noise": "#b0b0b0",
-        }
+        color_events = pal[0]   # headline metric
+        color_nodes = pal[4 % len(pal)]
+        color_explained = "#444"
 
         n = len(df)
-        fig_h = max(3.2, 0.35 * n + 2.2)
-        fig, (ax_top, ax_bot) = plt.subplots(
-            2, 1, figsize=(12, fig_h),
-            gridspec_kw={"height_ratios": [1.0, 1.6], "hspace": 0.35},
-        )
+        fig_h = max(2.6, 0.40 * n + 1.6)
+        fig, ax = plt.subplots(figsize=(12, fig_h))
 
         y = np.arange(n)
         labels = [h[:8] + "…" if len(h) > 10 else h for h in df["host_id"]]
 
-        # top: explained_pct + nodes kept
-        ax_top.barh(y - 0.2, df["explained_pct"], height=0.38,
-                    color=pal[0], label="explained %")
-        ax_top.barh(y + 0.2, df["pct_nodes_kept"], height=0.38,
-                    color=pal[4], label="nodes kept %")
-        ax_top.set_yticks(y)
-        ax_top.set_yticklabels(labels, fontsize=7)
-        ax_top.invert_yaxis()
-        ax_top.set_xlim(0, 100)
-        ax_top.set_xlabel("%")
-        ax_top.legend(fontsize=7, loc="lower right")
-        ax_top.set_title(
+        # side-by-side bars per host. Events on top (highlighted), nodes underneath.
+        ax.barh(y - 0.20, df["pct_events_kept"], height=0.38,
+                color=color_events, label="% events kept (kept_frac)")
+        ax.barh(y + 0.20, df["pct_nodes_kept"], height=0.38,
+                color=color_nodes, label="% nodes kept (N / N_orig)")
+
+        # Thin marker for explained%, so we can still see whether the NTF fit is healthy
+        # without it competing for visual weight with the preservation bars.
+        ax.scatter(df["explained_pct"], y, s=18, marker="|",
+                   color=color_explained, label="explained % (NTF fit)")
+
+        ax.set_yticks(y)
+        ax.set_yticklabels(labels, fontsize=7)
+        ax.invert_yaxis()
+        ax.set_xlim(0, 105)
+        ax.set_xlabel("%")
+        ax.set_title(
             f"{scope.get('dataset')}/{scope.get('sub_dataset')}   "
-            f"hosts={n}   window=[{scope.get('start_ns')}, {scope.get('end_ns')})",
+            f"hosts={n}   window=[{scope.get('start_ns')}, {scope.get('end_ns')})\n"
+            f"preservation per host  -  events kept (headline) and nodes kept",
             fontsize=9, loc="left",
         )
-        for i, row in df.iterrows():
-            if row["fallback_triggered"]:
-                ax_top.text(
-                    101, i, "⚑ fallback", fontsize=6, va="center", color="#b00020",
-                )
-        ax_top.set_xlim(0, 115)
+        ax.legend(fontsize=7, loc="lower right", frameon=False)
 
-        # bottom: stacked regime fractions
-        left = np.zeros(n)
-        for g in regime_order:
-            col = f"pct_{g}"
-            vals = df[col].to_numpy()
-            ax_bot.barh(y, vals, left=left, color=regime_colors[g],
-                        height=0.7, label=g)
-            left += vals
-        ax_bot.set_yticks(y)
-        ax_bot.set_yticklabels(labels, fontsize=7)
-        ax_bot.invert_yaxis()
-        ax_bot.set_xlim(0, 100)
-        ax_bot.set_xlabel("node regime share (%)")
-        ax_bot.legend(fontsize=7, loc="lower right", ncol=4)
+        for i, row in df.iterrows():
+            if row.get("fallback_triggered"):
+                ax.text(106, i, "⚑ fallback", fontsize=6, va="center", color="#b00020") # type: ignore
+        ax.set_xlim(0, 120)
 
         return fig
 
